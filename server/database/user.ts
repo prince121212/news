@@ -40,7 +40,7 @@ export class UserTable {
   }
 
   async getUser(id: string) {
-    return (await this.db.prepare(`SELECT id, email, data, created, updated FROM user WHERE id = ?`).get(id)) as UserInfo
+    return (await this.db.prepare(`SELECT id, email, data, type, created, updated FROM user WHERE id = ?`).get(id)) as UserInfo
   }
 
   async addPasswordUser(username: string, passwordHash: string) {
