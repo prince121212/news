@@ -73,7 +73,7 @@ export class Cache {
 
 export async function getCacheTable() {
   try {
-    const db = useDatabase()
+    const db = useAppDatabase()
     // logger.info("db: ", db.getInstance())
     if (process.env.ENABLE_CACHE === "false") return
     const cacheTable = new Cache(db)

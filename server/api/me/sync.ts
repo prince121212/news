@@ -4,7 +4,7 @@ import { UserTable } from "#/database/user"
 export default defineEventHandler(async (event) => {
   try {
     const { id } = event.context.user
-    const db = useDatabase()
+    const db = useAppDatabase()
     if (!db) throw new Error("Not found database")
     const userTable = new UserTable(db)
     if (process.env.INIT_TABLE !== "false") await userTable.init()

@@ -41,7 +41,7 @@ async function getTableNames(db: ReturnType<typeof useDatabase>) {
     const names = rows
       .filter(row => !row.type || row.type === "table")
       .map(row => row.name)
-      .filter((name): name is string => !!name && !name.startsWith("sqlite_"))
+      .filter((name): name is string => !!name && !name.startsWith("sqlite_") && !name.startsWith("_cf_"))
     if (names.length) return Array.from(new Set(names)).sort()
   }
 
@@ -72,7 +72,7 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const db = useDatabase()
+    const db = useAppDatabase()
     if (!db) throw new Error("db is not defined")
 
     const tableNames = await getTableNames(db)

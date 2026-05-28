@@ -4,7 +4,7 @@ import { UserTable } from "#/database/user"
 
 export default defineEventHandler(async (event) => {
   try {
-    const db = useDatabase()
+    const db = useAppDatabase()
     if (!db) throw new Error("db is not defined")
 
     const userTable = new UserTable(db)
