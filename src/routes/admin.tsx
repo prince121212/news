@@ -11,6 +11,28 @@ type AdminData = {
   tables: AdminTable[]
 }
 
+const TableLabels: Record<string, string> = {
+  cache: "缓存表",
+  user: "用户表",
+}
+
+const ColumnLabels: Record<string, Record<string, string>> = {
+  cache: {
+    id: "数据源",
+    data: "缓存内容",
+    updated: "更新时间",
+  },
+  user: {
+    id: "编号",
+    username: "用户名",
+    password: "密码",
+    data: "同步数据",
+    type: "账号类型",
+    created: "创建时间",
+    updated: "更新时间",
+  },
+}
+
 export const Route = createFileRoute("/admin")({
   component: AdminComponent,
 })
@@ -102,11 +124,11 @@ function AdminComponent() {
           {data.tables.map(table => (
             <section key={table.name} className="rounded-lg bg-neutral-400/10 p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
-                <h2 className="text-xl font-bold">{table.name}</h2>
+                <h2 className="text-xl font-bold">{TableLabels[table.name] ?? table.name}</h2>
                 <span className="text-sm op-60">{table.rows.length} 行</span>
               </div>
               {table.error && <div className="mb-3 rounded-md bg-red/10 p-2 text-sm color-red">{table.error}</div>}
-              <AdminTableView rows={table.rows} />
+              <AdminTableView tableName={table.name} rows={table.rows} />
             </section>
           ))}
         </div>
@@ -115,7 +137,7 @@ function AdminComponent() {
   )
 }
 
-function AdminTableView({ rows }: { rows: Record<string, unknown>[] }) {
+function AdminTableView({ tableName, rows }: { tableName: string, rows: Record<string, unknown>[] }) {
   const columns = useMemo(() => Array.from(new Set(rows.flatMap(row => Object.keys(row)))), [rows])
 
   if (rows.length === 0) {
@@ -128,7 +150,7 @@ function AdminTableView({ rows }: { rows: Record<string, unknown>[] }) {
         <thead>
           <tr className="border-b border-neutral-400/20">
             {columns.map(column => (
-              <th key={column} className="whitespace-nowrap p-2 font-bold">{column}</th>
+              <th key={column} className="whitespace-nowrap p-2 font-bold">{ColumnLabels[tableName]?.[column] ?? column}</th>
             ))}
           </tr>
         </thead>
@@ -137,9 +159,7 @@ function AdminTableView({ rows }: { rows: Record<string, unknown>[] }) {
             <tr key={index} className="border-b border-neutral-400/10 last:border-b-0">
               {columns.map(column => (
                 <td key={column} className="max-w-420px p-2 align-top">
-                  <pre className="whitespace-pre-wrap break-words font-mono text-xs">
-                    {formatCell(row[column])}
-                  </pre>
+                  <AdminCell column={column} value={row[column]} />
                 </td>
               ))}
             </tr>
@@ -147,6 +167,35 @@ function AdminTableView({ rows }: { rows: Record<string, unknown>[] }) {
         </tbody>
       </table>
     </div>
+  )
+}
+
+function AdminCell({ column, value }: { column: string, value: unknown }) {
+  const [expanded, setExpanded] = useState(false)
+  const text = formatCell(value)
+  const collapsible = column === "data" && text.length > 80
+
+  if (!collapsible) {
+    return (
+      <pre className="whitespace-pre-wrap break-words font-mono text-xs">
+        {text}
+      </pre>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      className="block max-w-420px text-left font-mono text-xs"
+      onClick={() => setExpanded(v => !v)}
+    >
+      <pre className={$(expanded ? "whitespace-pre-wrap" : "max-h-36px overflow-hidden whitespace-pre-wrap", "break-words")}>
+        {text}
+      </pre>
+      <span className="mt-1 inline-block text-xs color-primary">
+        {expanded ? "收起" : "展开"}
+      </span>
+    </button>
   )
 }
 
