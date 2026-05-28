@@ -13,84 +13,148 @@ import { motion } from "framer-motion"
 // }
 
 export function Menu() {
-  const { loggedIn, login, logout, userInfo, enableLogin } = useLogin()
+  const { loggedIn, login, logout, userInfo, enableLogin, loginDialogOpen, setLoginDialogOpen, submitLogin } = useLogin()
   const [shown, show] = useState(false)
   return (
-    <span className="relative" onMouseEnter={() => show(true)} onMouseLeave={() => show(false)}>
-      <span className="flex items-center scale-90">
-        {
-          enableLogin && loggedIn && userInfo.avatar
-            ? (
-                <button
-                  type="button"
-                  className="h-6 w-6 rounded-full bg-cover"
-                  style={
-                    {
-                      backgroundImage: `url(${userInfo.avatar}&s=24)`,
-                    }
-                  }
-                >
-                </button>
-              )
-            : <button type="button" className="btn i-si:more-muted-horiz-circle-duotone" />
-        }
+    <>
+      <span className="relative" onMouseEnter={() => show(true)} onMouseLeave={() => show(false)}>
+        <span className="flex items-center scale-90">
+          <button
+            type="button"
+            title={loggedIn ? userInfo.name : "账号"}
+            className={$(loggedIn ? "btn i-ph:user-circle-duotone" : "btn i-si:more-muted-horiz-circle-duotone")}
+          />
+        </span>
+        {shown && (
+          <div className="absolute right-0 z-99 bg-transparent pt-4 top-4">
+            <motion.div
+              id="dropdown-menu"
+              className={$([
+                "w-200px",
+                "bg-primary backdrop-blur-5 bg-op-70! rounded-lg shadow-xl",
+              ])}
+              initial={{
+                scale: 0.9,
+              }}
+              animate={{
+                scale: 1,
+              }}
+            >
+              <ol className="bg-base bg-op-70! backdrop-blur-md p-2 rounded-lg color-base text-base">
+                {enableLogin && (loggedIn
+                  ? (
+                      <>
+                        <li>
+                          <span className="i-ph:user-circle-duotone inline-block" />
+                          <span>{userInfo.name}</span>
+                        </li>
+                        <li onClick={logout}>
+                          <span className="i-ph:sign-out-duotone inline-block" />
+                          <span>退出登录</span>
+                        </li>
+                      </>
+                    )
+                  : (
+                      <li onClick={login}>
+                        <span className="i-ph:sign-in-duotone inline-block" />
+                        <span>账号登录 / 注册</span>
+                      </li>
+                    ))}
+                {/* <ThemeToggle /> */}
+              </ol>
+            </motion.div>
+          </div>
+        )}
       </span>
-      {shown && (
-        <div className="absolute right-0 z-99 bg-transparent pt-4 top-4">
-          <motion.div
-            id="dropdown-menu"
-            className={$([
-              "w-200px",
-              "bg-primary backdrop-blur-5 bg-op-70! rounded-lg shadow-xl",
-            ])}
-            initial={{
-              scale: 0.9,
-            }}
-            animate={{
-              scale: 1,
-            }}
-          >
-            <ol className="bg-base bg-op-70! backdrop-blur-md p-2 rounded-lg color-base text-base">
-              {enableLogin && (loggedIn
-                ? (
-                    <li onClick={logout}>
-                      <span className="i-ph:sign-out-duotone inline-block" />
-                      <span>退出登录</span>
-                    </li>
-                  )
-                : (
-                    <li onClick={login}>
-                      <span className="i-ph:sign-in-duotone inline-block" />
-                      <span>Github 账号登录</span>
-                    </li>
-                  ))}
-              {/* <ThemeToggle /> */}
-              <li onClick={() => window.open(Homepage)} className="cursor-pointer [&_*]:cursor-pointer transition-all">
-                <span className="i-ph:github-logo-duotone inline-block" />
-                <span>Star on Github </span>
-              </li>
-              <li className="flex gap-2 items-center">
-                <a
-                  href="https://github.com/ourongxing/newsnow"
-                >
-                  <img
-                    alt="GitHub stars badge"
-                    src="https://img.shields.io/github/stars/ourongxing/newsnow?logo=github&style=flat&labelColor=%235e3c40&color=%23614447"
-                  />
-                </a>
-                <a
-                  href="https://github.com/ourongxing/newsnow/fork"
-                >
-                  <img
-                    alt="GitHub forks badge"
-                    src="https://img.shields.io/github/forks/ourongxing/newsnow?logo=github&style=flat&labelColor=%235e3c40&color=%23614447"
-                  />
-                </a>
-              </li>
-            </ol>
-          </motion.div>
-        </div>
+      {loginDialogOpen && (
+        <LoginDialog
+          onClose={() => setLoginDialogOpen(false)}
+          onSubmit={submitLogin}
+        />
       )}
-    </span>
+    </>
+  )
+}
+
+function LoginDialog({ onClose, onSubmit }: {
+  onClose: () => void
+  onSubmit: (payload: { username: string, password: string, action: "login" | "register" }) => Promise<void>
+}) {
+  const [action, setAction] = useState<"login" | "register">("login")
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const submit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
+    try {
+      await onSubmit({ username, password, action })
+    } catch (e: any) {
+      setError(e?.data?.message || e?.message || "登录失败")
+    } finally {
+      setLoading(false)
+    }
+  }, [action, onSubmit, password, username])
+
+  return (
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4" onClick={onClose}>
+      <motion.form
+        className="w-full max-w-360px rounded-lg bg-base p-4 shadow-xl color-base"
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        onClick={e => e.stopPropagation()}
+        onSubmit={submit}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-lg font-bold">账号</span>
+          <button type="button" className="btn i-ph:x-duotone" onClick={onClose} />
+        </div>
+        <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
+          <button
+            type="button"
+            className={$("rounded-md p-2", action === "login" ? "bg-primary color-white" : "bg-neutral-400/10")}
+            onClick={() => setAction("login")}
+          >
+            登录
+          </button>
+          <button
+            type="button"
+            className={$("rounded-md p-2", action === "register" ? "bg-primary color-white" : "bg-neutral-400/10")}
+            onClick={() => setAction("register")}
+          >
+            注册
+          </button>
+        </div>
+        <label className="flex flex-col gap-1 mb-3">
+          <span className="text-sm op-70">用户名</span>
+          <input
+            className="rounded-md bg-neutral-400/10 p-2 outline-none focus:ring-2 focus:ring-primary"
+            value={username}
+            autoFocus
+            onChange={e => setUsername(e.target.value)}
+          />
+        </label>
+        <label className="flex flex-col gap-1 mb-3">
+          <span className="text-sm op-70">密码</span>
+          <input
+            className="rounded-md bg-neutral-400/10 p-2 outline-none focus:ring-2 focus:ring-primary"
+            value={password}
+            type="password"
+            onChange={e => setPassword(e.target.value)}
+          />
+        </label>
+        {error && <div className="mb-3 rounded-md bg-red/10 p-2 text-sm color-red">{error}</div>}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-md bg-primary p-2 color-white disabled:op-50"
+        >
+          {loading ? "处理中..." : action === "login" ? "登录" : "注册"}
+        </button>
+      </motion.form>
+    </div>
   )
 }

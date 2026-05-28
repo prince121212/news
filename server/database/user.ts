@@ -24,7 +24,7 @@ export class UserTable {
     logger.success(`init user table`)
   }
 
-  async addUser(id: string, email: string, type: "github") {
+  async addUser(id: string, email: string, type: "github" | "password") {
     const u = await this.getUser(id)
     const now = Date.now()
     if (!u) {
@@ -41,6 +41,20 @@ export class UserTable {
 
   async getUser(id: string) {
     return (await this.db.prepare(`SELECT id, email, data, created, updated FROM user WHERE id = ?`).get(id)) as UserInfo
+  }
+
+  async addPasswordUser(username: string, passwordHash: string) {
+    const u = await this.getUser(username)
+    if (u) throw new Error("用户名已存在")
+    await this.addUser(username, passwordHash, "password")
+  }
+
+  async verifyPasswordUser(username: string, passwordHash: string) {
+    const u = await this.getUser(username)
+    if (!u || u.type !== "password" || u.email !== passwordHash) {
+      throw new Error("用户名或密码错误")
+    }
+    return u
   }
 
   async setData(key: string, value: string, updatedTime = Date.now()) {

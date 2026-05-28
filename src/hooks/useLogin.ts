@@ -1,13 +1,12 @@
 const userAtom = atomWithStorage<{
   name?: string
-  avatar?: string
 }>("user", {})
 
 const jwtAtom = atomWithStorage("jwt", "")
+const loginDialogAtom = atom(false)
 
 const enableLoginAtom = atomWithStorage<{
   enable: boolean
-  url?: string
 }>("login", {
   enable: true,
 })
@@ -25,12 +24,34 @@ enableLoginAtom.onMount = (set) => {
 
 export function useLogin() {
   const userInfo = useAtomValue(userAtom)
+  const setUserInfo = useSetAtom(userAtom)
   const jwt = useAtomValue(jwtAtom)
+  const setJwt = useSetAtom(jwtAtom)
   const enableLogin = useAtomValue(enableLoginAtom)
+  const [loginDialogOpen, setLoginDialogOpen] = useAtom(loginDialogAtom)
 
   const login = useCallback(() => {
-    window.location.href = enableLogin.url || "/api/login"
-  }, [enableLogin])
+    setLoginDialogOpen(true)
+  }, [setLoginDialogOpen])
+
+  const submitLogin = useCallback(async (payload: {
+    username: string
+    password: string
+    action: "login" | "register"
+  }) => {
+    const res = await myFetch("/login", {
+      method: "POST",
+      body: payload,
+    }) as {
+      jwt: string
+      user: {
+        name: string
+      }
+    }
+    setJwt(res.jwt)
+    setUserInfo(res.user)
+    setLoginDialogOpen(false)
+  }, [setJwt, setUserInfo, setLoginDialogOpen])
 
   const logout = useCallback(() => {
     window.localStorage.clear()
@@ -43,5 +64,8 @@ export function useLogin() {
     enableLogin: !!enableLogin.enable,
     logout,
     login,
+    submitLogin,
+    loginDialogOpen,
+    setLoginDialogOpen,
   }
 }
