@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router"
 type AdminTable = {
   name: string
   rows: Record<string, unknown>[]
+  error?: string
 }
 
 type AdminData = {
@@ -104,6 +105,7 @@ function AdminComponent() {
                 <h2 className="text-xl font-bold">{table.name}</h2>
                 <span className="text-sm op-60">{table.rows.length} 行</span>
               </div>
+              {table.error && <div className="mb-3 rounded-md bg-red/10 p-2 text-sm color-red">{table.error}</div>}
               <AdminTableView rows={table.rows} />
             </section>
           ))}
