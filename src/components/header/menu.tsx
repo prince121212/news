@@ -1,4 +1,5 @@
 import { motion } from "framer-motion"
+import { createPortal } from "react-dom"
 
 // function ThemeToggle() {
 //   const { isDark, toggleDark } = useDark()
@@ -67,10 +68,13 @@ export function Menu() {
         )}
       </span>
       {loginDialogOpen && (
-        <LoginDialog
-          onClose={() => setLoginDialogOpen(false)}
-          onSubmit={submitLogin}
-        />
+        createPortal(
+          <LoginDialog
+            onClose={() => setLoginDialogOpen(false)}
+            onSubmit={submitLogin}
+          />,
+          document.body,
+        )
       )}
     </>
   )
@@ -80,14 +84,12 @@ function LoginDialog({ onClose, onSubmit }: {
   onClose: () => void
   onSubmit: (payload: { username: string, password: string, action: "login" | "register" }) => Promise<void>
 }) {
-  const [action, setAction] = useState<"login" | "register">("login")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
 
-  const submit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
+  const submit = useCallback(async (action: "login" | "register") => {
     setError("")
     setLoading(true)
     try {
@@ -97,7 +99,7 @@ function LoginDialog({ onClose, onSubmit }: {
     } finally {
       setLoading(false)
     }
-  }, [action, onSubmit, password, username])
+  }, [onSubmit, password, username])
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/30 backdrop-blur-sm px-4" onClick={onClose}>
@@ -106,27 +108,14 @@ function LoginDialog({ onClose, onSubmit }: {
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         onClick={e => e.stopPropagation()}
-        onSubmit={submit}
+        onSubmit={(e) => {
+          e.preventDefault()
+          submit("login")
+        }}
       >
         <div className="flex items-center justify-between mb-4">
           <span className="text-lg font-bold">账号</span>
           <button type="button" className="btn i-ph:x-duotone" onClick={onClose} />
-        </div>
-        <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
-          <button
-            type="button"
-            className={$("rounded-md p-2", action === "login" ? "bg-primary color-white" : "bg-neutral-400/10")}
-            onClick={() => setAction("login")}
-          >
-            登录
-          </button>
-          <button
-            type="button"
-            className={$("rounded-md p-2", action === "register" ? "bg-primary color-white" : "bg-neutral-400/10")}
-            onClick={() => setAction("register")}
-          >
-            注册
-          </button>
         </div>
         <label className="flex flex-col gap-1 mb-3">
           <span className="text-sm op-70">用户名</span>
@@ -147,13 +136,23 @@ function LoginDialog({ onClose, onSubmit }: {
           />
         </label>
         {error && <div className="mb-3 rounded-md bg-red/10 p-2 text-sm color-red">{error}</div>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-primary p-2 color-white disabled:op-50"
-        >
-          {loading ? "处理中..." : action === "login" ? "登录" : "注册"}
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="rounded-md bg-primary p-2 color-white disabled:op-50"
+          >
+            {loading ? "处理中..." : "登录"}
+          </button>
+          <button
+            type="button"
+            disabled={loading}
+            className="rounded-md bg-neutral-400/10 p-2 color-base disabled:op-50"
+            onClick={() => submit("register")}
+          >
+            注册
+          </button>
+        </div>
       </motion.form>
     </div>
   )
