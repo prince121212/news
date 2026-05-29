@@ -1,3 +1,3 @@
-import { fileURLToPath } from "node:url"
+import { resolve } from "node:path"
 
-export const projectDir = fileURLToPath(new URL("..", import.meta.url))
+export const projectDir = resolve(".")

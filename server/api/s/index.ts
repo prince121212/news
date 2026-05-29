@@ -1,6 +1,8 @@
+import process from "node:process"
 import type { SourceID, SourceResponse } from "@shared/types"
 import { getters } from "#/getters"
 import { getCacheTable } from "#/database/cache"
+import { NewsItemTable } from "#/database/news"
 import type { CacheInfo } from "#/types"
 
 export default defineEventHandler(async (event): Promise<SourceResponse> => {
@@ -16,7 +18,8 @@ export default defineEventHandler(async (event): Promise<SourceResponse> => {
       if (isValid(id)) throw new Error("Invalid source id")
     }
 
-    const cacheTable = await getCacheTable()
+    const isHottest = sources[id].type === "hottest"
+    const cacheTable = isHottest ? await getCacheTable() : undefined
     // Date.now() in Cloudflare Worker will not update throughout the entire runtime.
     const now = Date.now()
     let cache: CacheInfo | undefined
@@ -57,9 +60,16 @@ export default defineEventHandler(async (event): Promise<SourceResponse> => {
 
     try {
       const newData = (await getters[id]()).slice(0, 30)
-      if (cacheTable && newData.length) {
-        if (event.context.waitUntil) event.context.waitUntil(cacheTable.set(id, newData))
-        else await cacheTable.set(id, newData)
+      if (isHottest) {
+        if (cacheTable && newData.length) {
+          if (event.context.waitUntil) event.context.waitUntil(cacheTable.set(id, newData))
+          else await cacheTable.set(id, newData)
+        }
+      } else if (newData.length) {
+        const newsTable = new NewsItemTable(useAppDatabase() as any)
+        if (process.env.INIT_TABLE !== "false") await newsTable.init()
+        if (event.context.waitUntil) event.context.waitUntil(newsTable.upsertItems(id, newData))
+        else await newsTable.upsertItems(id, newData)
       }
       logger.success(`fetch ${id} latest`)
       return {

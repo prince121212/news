@@ -13,6 +13,15 @@ type D1QueryResponse = {
   result?: D1QueryResult[]
 }
 
+export type AppDatabase = {
+  prepare: (sql: string) => {
+    all: (...params: any[]) => Promise<any>
+    get: (...params: any[]) => Promise<any>
+    run: (...params: any[]) => Promise<any>
+  }
+  exec?: (sql: string) => Promise<any>
+}
+
 function shouldUseRemoteD1() {
   return process.env.REMOTE_D1 === "true"
     && !!process.env.CLOUDFLARE_API_TOKEN

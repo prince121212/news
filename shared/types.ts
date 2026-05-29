@@ -27,9 +27,16 @@ export type AllSourceID = {
 export type ColumnID = keyof typeof columns
 export type Metadata = Record<ColumnID, Column>
 
+export interface CustomGroup {
+  id: string
+  name: string
+  sources: SourceID[]
+}
+
 export interface PrimitiveMetadata {
   updatedTime: number
   data: Record<FixedColumnID, SourceID[]>
+  customGroups: CustomGroup[]
   action: "init" | "manual" | "sync"
 }
 
@@ -51,6 +58,21 @@ export interface OriginSource extends Partial<Omit<Source, "name" | "redirect">>
     // disable?: boolean
     // interval?: number
   } & Partial<Omit<Source, "title" | "name" | "redirect">>>
+}
+
+
+export interface SourceCatalog {
+  id: SourceID
+  name: string
+  title?: string
+  type?: "hottest" | "realtime"
+  kind?: "feed" | "hot"
+  column?: HiddenColumnID
+  home?: string
+  icon: string
+  redirect?: SourceID
+  enabled: boolean
+  updated?: number
 }
 
 export interface Source {
@@ -89,6 +111,12 @@ export interface NewsItem {
   title: string
   url: string
   mobileUrl?: string
+  summary?: string
+  content?: string
+  coverUrl?: string
+  videoUrl?: string
+  tag?: string
+  collectorSourceId?: SourceID
   pubDate?: number | string
   extra?: {
     hover?: string
