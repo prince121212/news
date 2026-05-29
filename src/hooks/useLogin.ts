@@ -60,6 +60,7 @@ export function useLogin() {
 
   return {
     loggedIn: !!jwt,
+    jwt,
     userInfo,
     enableLogin: !!enableLogin.enable,
     logout,

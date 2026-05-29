@@ -379,11 +379,30 @@ function Settings() {
 
 function AccountAction({ compact = false }: { compact?: boolean }) {
   const { loggedIn, login, logout, userInfo, enableLogin, loginDialogOpen, setLoginDialogOpen, submitLogin } = useLogin()
+  const [open, setOpen] = useState(false)
   if (!enableLogin) return null
   return (
     <>
       {loggedIn
-        ? <button className={$("aihot-account", compact && "compact")} onClick={logout}><span>已登录</span><b>{userInfo.name}</b></button>
+        ? <div
+            className={$("aihot-account-wrap", compact && "compact", open && "open")}
+            onMouseEnter={() => setOpen(true)}
+            onMouseLeave={() => setOpen(false)}
+          >
+            <button
+              className={$("aihot-account", compact && "compact")}
+              onClick={() => setOpen(v => !v)}
+            >
+              <span>已登录</span>
+              <b>{userInfo.name}</b>
+            </button>
+            <button
+              className="aihot-logout-btn"
+              onClick={logout}
+            >
+              退出登录
+            </button>
+          </div>
         : <button className={$("aihot-account", compact && "compact")} onClick={login}><span>账号</span><b>登录 / 注册</b></button>}
       {loginDialogOpen && createPortal(<AiHotLoginDialog onClose={() => setLoginDialogOpen(false)} onSubmit={submitLogin} />, document.body)}
     </>

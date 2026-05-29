@@ -24,7 +24,7 @@ function createPrimitiveMetadataAtom(
   const baseAtom = atom(getInitialValue())
   const derivedAtom = atom(get => get(baseAtom), (get, set, update: Update<PrimitiveMetadata>) => {
     const nextValue = preprocess(update instanceof Function ? update(get(baseAtom)) : update)
-    if (nextValue.updatedTime > get(baseAtom).updatedTime) {
+    if (nextValue.action === "sync" || nextValue.updatedTime > get(baseAtom).updatedTime) {
       set(baseAtom, nextValue)
       localStorage.setItem(key, JSON.stringify(nextValue))
     }

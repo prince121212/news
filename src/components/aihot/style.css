@@ -202,6 +202,8 @@ html:not(.dark) .aihot-source-check { background: rgba(255,255,255,.5); }
   .aihot-heat { grid-column: 2; font-size: 12px; margin-top: -3px; }
 }
 
+.aihot-account-wrap { position: relative; margin-bottom: 10px; }
+.aihot-account-wrap .aihot-account { margin-bottom: 0; }
 .aihot-account {
   width: 100%;
   display: grid;
@@ -217,8 +219,31 @@ html:not(.dark) .aihot-source-check { background: rgba(255,255,255,.5); }
 .aihot-account b { color: var(--ai-text); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .aihot-account span { font-size: 11px; color: var(--ai-weak); }
 .aihot-account.compact { margin: 8px 0 0; }
+.aihot-account-wrap.compact { margin: 8px 0 0; }
+.aihot-account-wrap.compact .aihot-account.compact { margin: 0; }
+.aihot-logout-btn {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 30;
+  height: 34px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  color: #fff;
+  background: rgba(239, 68, 68, .94);
+  box-shadow: 0 12px 28px rgba(127, 29, 29, .28);
+  font-size: 13px;
+  font-weight: 800;
+}
+.aihot-account-wrap.open .aihot-logout-btn,
+.aihot-account-wrap:hover .aihot-logout-btn { display: flex; }
 .aihot-sidebar-bottom .aihot-account.compact { display: none; }
 .aihot-nav > .aihot-account.compact { display: none; }
+.aihot-sidebar-bottom .aihot-account-wrap.compact { display: none; }
+.aihot-nav > .aihot-account-wrap.compact { display: none; }
 .aihot-modal-backdrop { position: fixed; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(2, 6, 23, .58); backdrop-filter: blur(8px); }
 .aihot-login-modal { width: min(380px, 100%); padding: 18px; border-radius: 22px; border: 1px solid var(--ai-border); background: var(--ai-panel-strong); color: var(--ai-text); box-shadow: 0 24px 90px rgba(0,0,0,.35); }
 .aihot-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
@@ -238,6 +263,8 @@ html:not(.dark) .aihot-field input { background: rgba(255,255,255,.76); }
 @media (max-width: 760px) {
   .aihot-sidebar-bottom .aihot-account { display: none; }
   .aihot-nav > .aihot-account.compact { display: grid; }
+  .aihot-sidebar-bottom .aihot-account-wrap { display: none; }
+  .aihot-nav > .aihot-account-wrap.compact { display: block; }
 }
 
 .aihot-admin-main { max-width: 1180px; margin: 0 auto; padding: 28px 20px 56px; }

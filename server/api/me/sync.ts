@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
       }
       return {
         data: parsed,
-        customGroups: [],
+        customGroups: undefined,
         updatedTime: updated,
       }
     } else if (event.method === "POST") {

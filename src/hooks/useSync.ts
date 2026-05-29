@@ -1,5 +1,5 @@
 import type { PrimitiveMetadata } from "@shared/types"
-import { useDebounce, useMount } from "react-use"
+import { useDebounce } from "react-use"
 import { useLogin } from "./useLogin"
 import { useToast } from "./useToast"
 import { safeParseString } from "~/utils"
@@ -41,7 +41,7 @@ async function downloadMetadata(): Promise<PrimitiveMetadata | undefined> {
 
 export function useSync() {
   const [primitiveMetadata, setPrimitiveMetadata] = useAtom(primitiveMetadataAtom)
-  const { logout, login } = useLogin()
+  const { logout, login, jwt } = useLogin()
   const toaster = useToast()
 
   useDebounce(async () => {
@@ -66,7 +66,8 @@ export function useSync() {
       fn()
     }
   }, 10000, [primitiveMetadata])
-  useMount(() => {
+  useEffect(() => {
+    if (!jwt) return
     const fn = async () => {
       try {
         const metadata = await downloadMetadata()
@@ -87,5 +88,5 @@ export function useSync() {
       }
     }
     fn()
-  })
+  }, [jwt])
 }
