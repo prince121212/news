@@ -250,6 +250,8 @@ function groupByDate(items: TimelineNewsItem[]) {
 function TimelineItem({ item, source, catalogMap }: { item: NewsItem, source: SourceID, catalogMap: CatalogMap }) {
   const text = summary(item)
   const info = getSourceInfo(source, catalogMap)
+  const tags = item.tags?.length ? item.tags : (item.tag ? [item.tag] : [info.column ? columns[info.column as keyof typeof columns].zh : "资讯"])
+  const avatar = item.sourceAvatarUrl || info.icon
   return (
     <article className="aihot-timeline-item">
       <div className="aihot-line"><span className="aihot-dot" /></div>
@@ -257,11 +259,15 @@ function TimelineItem({ item, source, catalogMap }: { item: NewsItem, source: So
         <div className="aihot-time">{clock(item)}</div>
         <a className="aihot-news-card" href={item.url} target="_blank" rel="noreferrer">
           <div className="aihot-meta">
-            <div className="aihot-meta-source"><img className="aihot-avatar" src={info.icon} onError={e => e.currentTarget.style.display = "none"} /> <span>{item.sourceName || info.name}</span>{!item.sourceName && info.title && <span>@ {info.title}</span>}</div>
-            <div className="aihot-tags"><span className="aihot-tag">{item.tag || (info.column ? columns[info.column as keyof typeof columns].zh : "资讯")}</span>{!item.tag && info.type === "realtime" && <span className="aihot-tag">实时</span>}</div>
+            <div className="aihot-meta-source"><img className="aihot-avatar" src={avatar} onError={e => e.currentTarget.style.display = "none"} /> <span>{item.sourceName || info.name}</span>{!item.sourceName && info.title && <span>@ {info.title}</span>}</div>
           </div>
           <h2 className="aihot-title">{item.title}</h2>
           {text && <p className="aihot-summary">{text}</p>}
+          {(item.coverUrl || item.videoUrl) && <div className="aihot-media-preview">
+            <img src={item.coverUrl || item.videoUrl} alt="" loading="lazy" />
+            {item.videoUrl && <span className="aihot-play">▶</span>}
+          </div>}
+          <div className="aihot-tags">{tags.map(tag => <span className="aihot-tag" key={tag}>{tag}</span>)}{!item.tags?.length && !item.tag && info.type === "realtime" && <span className="aihot-tag">实时</span>}</div>
         </a>
       </div>
     </article>

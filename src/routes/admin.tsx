@@ -27,7 +27,7 @@ const ColumnLabels: Record<string, Record<string, string>> = {
   user: { id: "编号", username: "用户名", data: "同步数据", type: "账号类型", created: "创建时间", updated: "更新时间" },
   feed_source: { id: "ID", name: "名称", title: "副标题", column_id: "分类", home: "主页", icon: "图标", redirect: "跳转", enabled: "启用", updated: "更新时间" },
   hot_source: { id: "ID", name: "名称", title: "副标题", column_id: "分类", home: "主页", icon: "图标", redirect: "跳转", enabled: "启用", updated: "更新时间" },
-  news_item: { id: "ID", source_id: "信源", source_name: "信源名称", collector_source_id: "获取源", tag: "标签", original_id: "原始ID", title: "标题", url: "链接", mobile_url: "移动端链接", summary: "摘要", content: "正文", cover_url: "封面", video_url: "视频", pub_date: "发布时间", fetched_at: "抓取时间", updated_at: "更新时间", raw_extra: "扩展数据" },
+  news_item: { id: "ID", source_id: "信源", source_name: "信源名称", source_avatar_url: "信源头像", collector_source_id: "获取源", tag: "标签", tags: "标签组", original_id: "原始ID", title: "标题", url: "链接", mobile_url: "移动端链接", summary: "摘要", content: "正文", cover_url: "封面", video_url: "视频", pub_date: "发布时间", fetched_at: "抓取时间", updated_at: "更新时间", raw_extra: "扩展数据" },
 }
 
 export const Route = createFileRoute("/admin")({ component: AdminComponent })

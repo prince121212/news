@@ -6,6 +6,7 @@ type NewsItemRow = {
   id: string
   source_id: SourceID
   source_name?: string
+  source_avatar_url?: string
   collector_source_id?: SourceID
   original_id: string
   title: string
@@ -16,6 +17,7 @@ type NewsItemRow = {
   cover_url?: string
   video_url?: string
   tag?: string
+  tags?: string
   pub_date?: number
   fetched_at: number
   updated_at: number
@@ -68,6 +70,7 @@ function rowToItem(row: NewsItemRow): NewsItem & { source: SourceID, sourceId: S
     source: row.source_id,
     sourceId: row.source_id,
     sourceName: row.source_name || undefined,
+    sourceAvatarUrl: row.source_avatar_url || undefined,
     collectorSourceId: row.collector_source_id || undefined,
     fetchedAt: row.fetched_at,
     summary: row.summary || undefined,
@@ -75,6 +78,7 @@ function rowToItem(row: NewsItemRow): NewsItem & { source: SourceID, sourceId: S
     coverUrl: row.cover_url || undefined,
     videoUrl: row.video_url || undefined,
     tag: row.tag || undefined,
+    tags: row.tags ? JSON.parse(row.tags) : undefined,
     extra: row.raw_extra ? JSON.parse(row.raw_extra) : undefined,
   }
 }
@@ -91,6 +95,7 @@ export class NewsItemTable {
         id TEXT PRIMARY KEY,
         source_id TEXT NOT NULL,
         source_name TEXT,
+        source_avatar_url TEXT,
         collector_source_id TEXT,
         original_id TEXT,
         title TEXT NOT NULL,
@@ -101,6 +106,7 @@ export class NewsItemTable {
         cover_url TEXT,
         video_url TEXT,
         tag TEXT,
+        tags TEXT,
         pub_date INTEGER,
         fetched_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
@@ -144,8 +150,14 @@ export class NewsItemTable {
     if (!columnNames.includes("source_name")) {
       await this.db.prepare(`ALTER TABLE news_item ADD COLUMN source_name TEXT`).run()
     }
+    if (!columnNames.includes("source_avatar_url")) {
+      await this.db.prepare(`ALTER TABLE news_item ADD COLUMN source_avatar_url TEXT`).run()
+    }
     if (!columnNames.includes("tag")) {
       await this.db.prepare(`ALTER TABLE news_item ADD COLUMN tag TEXT`).run()
+    }
+    if (!columnNames.includes("tags")) {
+      await this.db.prepare(`ALTER TABLE news_item ADD COLUMN tags TEXT`).run()
     }
   }
 
@@ -156,12 +168,14 @@ export class NewsItemTable {
       const pubDate = toTime(item.pubDate || item.extra?.date) || now
       const visibleSourceId = item.sourceId ?? sourceId
       const collector = item.sourceId && item.sourceId !== sourceId ? sourceId : collectorSourceId
+      const tags = item.tags?.length ? [...new Set(item.tags.filter(Boolean))] : (item.tag ? [item.tag] : [])
       await this.db.prepare(`
-        INSERT INTO news_item (id, source_id, source_name, collector_source_id, original_id, title, url, mobile_url, summary, content, cover_url, video_url, tag, pub_date, fetched_at, updated_at, raw_extra)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO news_item (id, source_id, source_name, source_avatar_url, collector_source_id, original_id, title, url, mobile_url, summary, content, cover_url, video_url, tag, tags, pub_date, fetched_at, updated_at, raw_extra)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(url) DO UPDATE SET
           source_id = excluded.source_id,
           source_name = excluded.source_name,
+          source_avatar_url = excluded.source_avatar_url,
           collector_source_id = excluded.collector_source_id,
           title = excluded.title,
           mobile_url = excluded.mobile_url,
@@ -170,6 +184,7 @@ export class NewsItemTable {
           cover_url = excluded.cover_url,
           video_url = excluded.video_url,
           tag = excluded.tag,
+          tags = excluded.tags,
           pub_date = excluded.pub_date,
           fetched_at = excluded.fetched_at,
           updated_at = excluded.updated_at,
@@ -178,6 +193,7 @@ export class NewsItemTable {
         itemKey(item),
         visibleSourceId,
         item.sourceName ?? "",
+        item.sourceAvatarUrl ?? "",
         collector && collector !== visibleSourceId ? collector : "",
         String(item.id),
         item.title,
@@ -187,7 +203,8 @@ export class NewsItemTable {
         item.content ?? "",
         getCoverUrl(item) ?? "",
         getVideoUrl(item) ?? "",
-        item.tag ?? "",
+        item.tag ?? tags[0] ?? "",
+        tags.length ? JSON.stringify(tags) : "",
         pubDate,
         now,
         now,
