@@ -208,12 +208,26 @@ function Timeline({ sources: ids, keyword, collapsed, setCollapsed }: { sources:
     <section className="aihot-timeline-wrap">
       <div className="aihot-date"><span>{new Date().toLocaleDateString("zh-CN", { month: "long", day: "numeric" })}</span><button aria-label={collapsed ? "展开时间线" : "收起时间线"} onClick={() => setCollapsed(!collapsed)}>{collapsed ? "›" : "⌄"}</button></div>
       {!collapsed && <div className="aihot-timeline">
-        {items.map(item => <TimelineItem key={`${item.sourceId}-${item.id}`} item={item} source={item.sourceId ?? item.source!} catalogMap={catalogMap} />)}
+        {groupByDate(items).map(group => <div key={group.dateKey} className="aihot-day-group"><div className="aihot-day-label">{group.label}</div>{group.items.map(item => <TimelineItem key={`${item.sourceId}-${item.id}`} item={item} source={item.sourceId ?? item.source!} catalogMap={catalogMap} />)}</div>)}
         {!firstPage.isLoading && !items.length && <div className="aihot-empty">暂无信息</div>}
         {nextCursor && <button className="aihot-load-more" disabled={loadingMore} onClick={loadMore}>{loadingMore ? "加载中" : "加载更多"}</button>}
       </div>}
     </section>
   )
+}
+
+function groupByDate(items: TimelineNewsItem[]) {
+  const groups: { dateKey: string, label: string, items: TimelineNewsItem[] }[] = []
+  for (const item of items) {
+    const time = new Date(itemTime(item)).getTime()
+    const date = new Date(time)
+    const dateKey = Number.isFinite(time) ? date.toLocaleDateString("sv-SE") : "unknown"
+    const label = Number.isFinite(time) ? date.toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "short" }) : "未知日期"
+    const last = groups.at(-1)
+    if (!last || last.dateKey !== dateKey) groups.push({ dateKey, label, items: [item] })
+    else last.items.push(item)
+  }
+  return groups
 }
 
 function TimelineItem({ item, source, catalogMap }: { item: NewsItem, source: SourceID, catalogMap: CatalogMap }) {

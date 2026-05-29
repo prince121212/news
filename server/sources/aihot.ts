@@ -15,6 +15,8 @@ type AihotPublicItem = {
 
 type AihotPublicResponse = {
   items?: AihotPublicItem[]
+  hasNext?: boolean
+  nextCursor?: string
 }
 
 function normalizeCategory(category?: string) {
@@ -31,25 +33,54 @@ function normalizeCategory(category?: string) {
   return category ? (map[category] ?? category) : ""
 }
 
-export default defineSource(async () => {
-  const data = await myFetch<AihotPublicResponse>("https://aihot.virxact.com/api/public/items?mode=all")
+function mapPublicItem(item: AihotPublicItem): NewsItem {
+  return {
+    id: item.id || item.url!,
+    title: item.title!,
+    url: item.url!,
+    sourceId: "aihot",
+    sourceName: item.source || "AIHOT",
+    summary: item.summary || "",
+    content: item.summary || "",
+    coverUrl: item.coverUrl || item.image || undefined,
+    videoUrl: item.videoUrl || undefined,
+    tag: normalizeCategory(item.category),
+    pubDate: item.publishedAt,
+    extra: {
+      info: item.summary || item.source || "",
+      hover: item.source || "AIHOT",
+    },
+  }
+}
+
+const all = defineSource(async () => {
+  const collected: AihotPublicItem[] = []
+  let cursor = ""
+  for (let page = 0; page < 3; page += 1) {
+    const url = new URL("https://aihot.virxact.com/api/public/items")
+    url.searchParams.set("mode", "all")
+    if (cursor) url.searchParams.set("cursor", cursor)
+    const data = await myFetch<AihotPublicResponse>(url.toString())
+    collected.push(...(data.items ?? []))
+    if (!data.hasNext || !data.nextCursor) break
+    cursor = data.nextCursor
+  }
+  return collected
+    .filter(item => item.title && item.url)
+    .map(mapPublicItem)
+})
+
+const selected = defineSource(async () => {
+  const data = await myFetch<AihotPublicResponse>("https://aihot.virxact.com/api/public/items?mode=selected")
   return (data.items ?? [])
     .filter(item => item.title && item.url)
-    .map((item): NewsItem => ({
-      id: item.id || item.url!,
-      title: item.title!,
-      url: item.url!,
-      sourceId: "aihot",
-      sourceName: item.source || "AIHOT",
-      summary: item.summary || "",
-      content: item.summary || "",
-      coverUrl: item.coverUrl || item.image || undefined,
-      videoUrl: item.videoUrl || undefined,
-      tag: normalizeCategory(item.category),
-      pubDate: item.publishedAt,
-      extra: {
-        info: item.summary || item.source || "",
-        hover: item.source || "AIHOT",
-      },
+    .map(item => ({
+      ...mapPublicItem(item),
+      sourceId: "aihot-selected",
     }))
+})
+
+export default defineSource({
+  aihot: all,
+  "aihot-selected": selected,
 })

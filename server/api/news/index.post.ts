@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
       const lastFetchedAt = await newsTable.getLastFetchedAt(id)
       const stale = body.refresh || !lastFetchedAt || Date.now() - lastFetchedAt > sources[id].interval
       if (!stale) return
-      const data = (await getters[id]()).slice(0, 30)
+      const data = (await getters[id]()).slice(0, 100)
       await newsTable.upsertItems(id, data)
     }))
 

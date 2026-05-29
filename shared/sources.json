@@ -175,14 +175,24 @@
     "interval": 600000
   },
   "aihot": {
-    "title": "AI 聚合",
+    "title": "全部动态",
     "name": "AIHOT",
     "type": "realtime",
     "desc": "AIHOT agent 聚合信息流",
     "column": "tech",
     "home": "https://aihot.virxact.com/agent",
     "color": "purple",
-    "interval": 1800000
+    "interval": 120000
+  },
+  "aihot-selected": {
+    "title": "精选",
+    "name": "AIHOT",
+    "type": "realtime",
+    "desc": "AIHOT 精选 RSS",
+    "column": "tech",
+    "home": "https://aihot.virxact.com/feed.xml",
+    "color": "purple",
+    "interval": 120000
   },
   "thepaper": {
     "title": "热榜",

@@ -14,8 +14,8 @@ export async function rss2json(url: string): Promise<RSSInfo | undefined> {
 
   const result = xml.parse(data as string)
 
-  let channel = result.rss && result.rss.channel ? result.rss.channel : result.feed
-  if (Array.isArray(channel)) channel = channel[0]
+  const channelRaw = result.rss && result.rss.channel ? result.rss.channel : result.feed
+  const channel = Array.isArray(channelRaw) ? (channelRaw[0] ?? {}) : (channelRaw ?? {})
 
   const rss = {
     title: channel.title ?? "",
