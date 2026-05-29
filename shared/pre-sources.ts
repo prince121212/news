@@ -144,6 +144,16 @@ export const originSources = {
     type: "realtime",
     home: "https://www.ithome.com",
   },
+  "aihot": {
+    name: "AIHOT",
+    title: "AI 聚合",
+    color: "purple",
+    column: "tech",
+    type: "realtime",
+    interval: Time.Common,
+    home: "https://aihot.virxact.com/agent",
+    desc: "AIHOT agent 聚合信息流",
+  },
   "thepaper": {
     name: "澎湃新闻",
     interval: Time.Common,

@@ -71,6 +71,8 @@ function clock(item: NewsItem) {
 }
 
 function summary(item: NewsItem) {
+  if (item.summary) return item.summary
+  if (item.content) return item.content.slice(0, 240)
   const info = item.extra?.info
   if (typeof info === "string") return info
   return item.extra?.hover || ""
@@ -224,8 +226,8 @@ function TimelineItem({ item, source, catalogMap }: { item: NewsItem, source: So
         <div className="aihot-time">{clock(item)}</div>
         <a className="aihot-news-card" href={item.url} target="_blank" rel="noreferrer">
           <div className="aihot-meta">
-            <div className="aihot-meta-source"><img className="aihot-avatar" src={info.icon} onError={e => e.currentTarget.style.display = "none"} /> <span>{info.name}</span>{info.title && <span>@ {info.title}</span>}</div>
-            <div className="aihot-tags"><span className="aihot-tag">{info.column ? columns[info.column as keyof typeof columns].zh : "资讯"}</span>{info.type === "realtime" && <span className="aihot-tag">实时</span>}</div>
+            <div className="aihot-meta-source"><img className="aihot-avatar" src={info.icon} onError={e => e.currentTarget.style.display = "none"} /> <span>{item.sourceName || info.name}</span>{!item.sourceName && info.title && <span>@ {info.title}</span>}</div>
+            <div className="aihot-tags"><span className="aihot-tag">{item.tag || (info.column ? columns[info.column as keyof typeof columns].zh : "资讯")}</span>{!item.tag && info.type === "realtime" && <span className="aihot-tag">实时</span>}</div>
           </div>
           <h2 className="aihot-title">{item.title}</h2>
           {text && <p className="aihot-summary">{text}</p>}

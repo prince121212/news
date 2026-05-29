@@ -47,6 +47,7 @@ export function createDefaultCustomGroups(): CustomGroup[] {
   const tech = metadata.tech.sources.filter(id => sources[id]?.type !== "hottest")
   const finance = metadata.finance.sources.filter(id => sources[id]?.type !== "hottest")
   const ai = normalizeSources([
+    "aihot",
     "solidot",
     "v2ex-share",
   ].filter(id => sources[id as SourceID]) as SourceID[])

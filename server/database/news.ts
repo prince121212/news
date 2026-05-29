@@ -5,6 +5,7 @@ import type { AppDatabase } from "#/utils/database"
 type NewsItemRow = {
   id: string
   source_id: SourceID
+  source_name?: string
   collector_source_id?: SourceID
   original_id: string
   title: string
@@ -66,6 +67,7 @@ function rowToItem(row: NewsItemRow): NewsItem & { source: SourceID, sourceId: S
     pubDate: row.pub_date || undefined,
     source: row.source_id,
     sourceId: row.source_id,
+    sourceName: row.source_name || undefined,
     collectorSourceId: row.collector_source_id || undefined,
     fetchedAt: row.fetched_at,
     summary: row.summary || undefined,
@@ -88,6 +90,7 @@ export class NewsItemTable {
       CREATE TABLE IF NOT EXISTS news_item (
         id TEXT PRIMARY KEY,
         source_id TEXT NOT NULL,
+        source_name TEXT,
         collector_source_id TEXT,
         original_id TEXT,
         title TEXT NOT NULL,
@@ -138,6 +141,9 @@ export class NewsItemTable {
     if (!columnNames.includes("collector_source_id")) {
       await this.db.prepare(`ALTER TABLE news_item ADD COLUMN collector_source_id TEXT`).run()
     }
+    if (!columnNames.includes("source_name")) {
+      await this.db.prepare(`ALTER TABLE news_item ADD COLUMN source_name TEXT`).run()
+    }
     if (!columnNames.includes("tag")) {
       await this.db.prepare(`ALTER TABLE news_item ADD COLUMN tag TEXT`).run()
     }
@@ -148,11 +154,14 @@ export class NewsItemTable {
     for (const item of items) {
       if (!item.title || !item.url) continue
       const pubDate = toTime(item.pubDate || item.extra?.date) || now
+      const visibleSourceId = item.sourceId ?? sourceId
+      const collector = item.sourceId && item.sourceId !== sourceId ? sourceId : collectorSourceId
       await this.db.prepare(`
-        INSERT INTO news_item (id, source_id, collector_source_id, original_id, title, url, mobile_url, summary, content, cover_url, video_url, tag, pub_date, fetched_at, updated_at, raw_extra)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO news_item (id, source_id, source_name, collector_source_id, original_id, title, url, mobile_url, summary, content, cover_url, video_url, tag, pub_date, fetched_at, updated_at, raw_extra)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(url) DO UPDATE SET
           source_id = excluded.source_id,
+          source_name = excluded.source_name,
           collector_source_id = excluded.collector_source_id,
           title = excluded.title,
           mobile_url = excluded.mobile_url,
@@ -167,8 +176,9 @@ export class NewsItemTable {
           raw_extra = excluded.raw_extra;
       `).run(
         itemKey(item),
-        sourceId,
-        collectorSourceId && collectorSourceId !== sourceId ? collectorSourceId : "",
+        visibleSourceId,
+        item.sourceName ?? "",
+        collector && collector !== visibleSourceId ? collector : "",
         String(item.id),
         item.title,
         item.url,

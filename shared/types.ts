@@ -116,6 +116,8 @@ export interface NewsItem {
   coverUrl?: string
   videoUrl?: string
   tag?: string
+  sourceId?: SourceID
+  sourceName?: string
   collectorSourceId?: SourceID
   pubDate?: number | string
   extra?: {
