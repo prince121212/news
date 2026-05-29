@@ -32,7 +32,7 @@ function normalizeCategory(category?: string) {
 }
 
 export default defineSource(async () => {
-  const data = await myFetch<AihotPublicResponse>("https://aihot.virxact.com/api/public/items?mode=selected")
+  const data = await myFetch<AihotPublicResponse>("https://aihot.virxact.com/api/public/items?mode=all")
   return (data.items ?? [])
     .filter(item => item.title && item.url)
     .map((item): NewsItem => ({
