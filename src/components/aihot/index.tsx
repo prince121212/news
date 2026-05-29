@@ -114,7 +114,6 @@ export function AiHotApp() {
   const { isDark, toggleDark } = useDark()
   const [feed, setFeed] = useState<Feed>("all")
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [collapsed, setCollapsed] = useState(false)
   const [timelineKeyword, setTimelineKeyword] = useState("")
   const groups = useAtomValue(customGroupsAtom)
 
@@ -155,7 +154,7 @@ export function AiHotApp() {
               {showTimelineSearch && <input className="aihot-search" value={timelineKeyword} onChange={e => setTimelineKeyword(e.target.value)} placeholder="搜索标题、摘要或来源" />}
             </div>
           </section>
-          {feed === "settings" ? <Settings /> : feed === "hottest" ? <Hottest /> : <Timeline sources={activeGroup ? activeGroup.sources : allDynamicSources(groups)} keyword={timelineKeyword} collapsed={collapsed} setCollapsed={setCollapsed} />}
+          {feed === "settings" ? <Settings /> : feed === "hottest" ? <Hottest /> : <Timeline sources={activeGroup ? activeGroup.sources : allDynamicSources(groups)} keyword={timelineKeyword} />}
         </main>
       </div>
     </div>
@@ -180,10 +179,11 @@ function allDynamicSources(groups: CustomGroup[]) {
   return [...new Set(groups.flatMap(g => g.sources).filter(id => sources[id]?.type !== "hottest"))] as SourceID[]
 }
 
-function Timeline({ sources: ids, keyword, collapsed, setCollapsed }: { sources: SourceID[], keyword: string, collapsed: boolean, setCollapsed: (v: boolean) => void }) {
+function Timeline({ sources: ids, keyword }: { sources: SourceID[], keyword: string }) {
   const catalogMap = useSourceCatalogMap()
   const [extraPages, setExtraPages] = useState<NewsPage[]>([])
   const [loadingMore, setLoadingMore] = useState(false)
+  const [collapsedDays, setCollapsedDays] = useState<string[]>([])
   const sourceKey = ids.join(",")
   const firstPage = useQuery({
     queryKey: ["news", sourceKey, keyword],
@@ -191,7 +191,10 @@ function Timeline({ sources: ids, keyword, collapsed, setCollapsed }: { sources:
     enabled: ids.length > 0,
     retry: false,
   })
-  useEffect(() => { setExtraPages([]) }, [sourceKey, keyword])
+  useEffect(() => {
+    setExtraPages([])
+    setCollapsedDays([])
+  }, [sourceKey, keyword])
   const pages = [firstPage.data, ...extraPages].filter(Boolean) as NewsPage[]
   const items = pages.flatMap(page => page.items)
   const nextCursor = pages.at(-1)?.nextCursor
@@ -206,12 +209,26 @@ function Timeline({ sources: ids, keyword, collapsed, setCollapsed }: { sources:
   }
   return (
     <section className="aihot-timeline-wrap">
-      <div className="aihot-date"><span>{new Date().toLocaleDateString("zh-CN", { month: "long", day: "numeric" })}</span><button aria-label={collapsed ? "展开时间线" : "收起时间线"} onClick={() => setCollapsed(!collapsed)}>{collapsed ? "›" : "⌄"}</button></div>
-      {!collapsed && <div className="aihot-timeline">
-        {groupByDate(items).map(group => <div key={group.dateKey} className="aihot-day-group"><div className="aihot-day-label">{group.label}</div>{group.items.map(item => <TimelineItem key={`${item.sourceId}-${item.id}`} item={item} source={item.sourceId ?? item.source!} catalogMap={catalogMap} />)}</div>)}
+      <div className="aihot-timeline">
+        {groupByDate(items).map((group) => {
+          const isCollapsed = collapsedDays.includes(group.dateKey)
+          return (
+            <div key={group.dateKey} className="aihot-day-group">
+              <button
+                className="aihot-day-label"
+                aria-expanded={!isCollapsed}
+                onClick={() => setCollapsedDays(days => days.includes(group.dateKey) ? days.filter(day => day !== group.dateKey) : [...days, group.dateKey])}
+              >
+                <span>{group.label}</span>
+                <span className="aihot-day-arrow">{isCollapsed ? "›" : "⌄"}</span>
+              </button>
+              {!isCollapsed && group.items.map(item => <TimelineItem key={`${item.sourceId}-${item.id}`} item={item} source={item.sourceId ?? item.source!} catalogMap={catalogMap} />)}
+            </div>
+          )
+        })}
         {!firstPage.isLoading && !items.length && <div className="aihot-empty">暂无信息</div>}
         {nextCursor && <button className="aihot-load-more" disabled={loadingMore} onClick={loadMore}>{loadingMore ? "加载中" : "加载更多"}</button>}
-      </div>}
+      </div>
     </section>
   )
 }

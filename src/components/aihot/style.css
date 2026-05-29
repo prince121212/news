@@ -53,11 +53,10 @@ html:not(.dark) .aihot-sidebar { background: rgba(248, 250, 252, .78); }
 html:not(.dark) .aihot-search { background: rgba(255,255,255,.72); }
 
 .aihot-timeline-wrap, .aihot-hot-wrap, .aihot-settings { max-width: 1180px; margin: 0 auto; }
-.aihot-date { display: flex; align-items: center; gap: 8px; color: var(--ai-muted); margin: 16px 0 12px 4px; }
-.aihot-date button { width: 24px; height: 24px; border-radius: 8px; color: var(--ai-muted); }
 .aihot-timeline { display: flex; flex-direction: column; gap: 12px; }
 .aihot-day-group { display: flex; flex-direction: column; gap: 12px; }
-.aihot-day-label { position: sticky; top: 114px; z-index: 6; width: max-content; max-width: 100%; padding: 6px 10px; margin: 6px 0 0 38px; border: 1px solid var(--ai-border); border-radius: 999px; color: var(--ai-muted); background: var(--ai-panel-strong); backdrop-filter: blur(16px); font-size: 12px; font-weight: 800; }
+.aihot-day-label { position: sticky; top: 114px; z-index: 6; display: inline-flex; align-items: center; gap: 8px; width: max-content; max-width: 100%; padding: 6px 10px; margin: 6px 0 0 38px; border: 1px solid var(--ai-border); border-radius: 999px; color: var(--ai-muted); background: var(--ai-panel-strong); backdrop-filter: blur(16px); font-size: 12px; font-weight: 800; cursor: pointer; }
+.aihot-day-arrow { color: var(--ai-weak); font-size: 14px; line-height: 1; }
 .aihot-timeline-item { display: grid; grid-template-columns: 24px 1fr; gap: 14px; }
 .aihot-line { position: relative; display: flex; justify-content: center; }
 .aihot-line::before { content: ""; position: absolute; top: 0; bottom: -12px; width: 1px; background: rgba(148, 163, 184, .25); }
