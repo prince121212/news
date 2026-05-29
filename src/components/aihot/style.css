@@ -289,9 +289,11 @@ html:not(.dark) .aihot-admin-table-wrap { background: rgba(255,255,255,.6); }
 .aihot-admin-table th, .aihot-admin-table td { padding: 10px 12px; border-bottom: 1px solid rgba(148,163,184,.12); text-align: left; vertical-align: top; }
 .aihot-admin-table th { white-space: nowrap; color: var(--ai-muted); font-weight: 800; }
 .aihot-admin-table pre { max-width: 460px; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; color: var(--ai-text); }
-.aihot-admin-cell-toggle { display: block; text-align: left; }
-.aihot-admin-cell-toggle pre.collapsed { max-height: 54px; overflow: hidden; }
-.aihot-admin-cell-toggle span { color: var(--ai-cyan); font-size: 12px; }
+.aihot-admin-cell-toggle { width: 100%; display: grid; gap: 4px; text-align: left; }
+.aihot-admin-cell-text { display: block; color: var(--ai-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aihot-admin-cell-toggle.expanded .aihot-admin-cell-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.aihot-admin-cell-hint { color: var(--ai-cyan); font-size: 12px; }
+.aihot-admin-pager-info { display: inline-flex; align-items: center; height: 36px; padding: 0 12px; border: 1px solid var(--ai-border); border-radius: 12px; color: var(--ai-muted); background: rgba(148,163,184,.08); font-size: 13px; }
 @media (max-width: 760px) {
   .aihot-admin-main { padding: 14px 12px 32px; }
   .aihot-admin-hero { position: relative; top: auto; align-items: flex-start; padding: 14px; border-radius: 18px; }

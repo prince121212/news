@@ -38,7 +38,7 @@ function AdminComponent() {
   const [data, setData] = useState<AdminData>()
   const [activeTable, setActiveTable] = useState("")
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(20)
+  const [pageSize] = useState(50)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -47,7 +47,7 @@ function AdminComponent() {
     setError("")
     setLoading(true)
     try {
-      const res = await myFetch("/admin/db", { method: "POST", body: { username, password, table: targetTable || undefined, page: targetPage, pageSize: targetPageSize } }) as AdminData
+      const res = await myFetch("/admin/db", { method: "POST", body: { username, password, table: targetTable || undefined, page: targetPage, pageSize: targetPageSize ?? 50 } }) as AdminData
       setData(res)
       setActiveTable(res.table ?? "")
       setPage(res.page)
@@ -56,7 +56,7 @@ function AdminComponent() {
     } finally {
       setLoading(false)
     }
-  }, [activeTable, page, pageSize, password, username])
+  }, [activeTable, page, password, username])
 
   const switchTable = (table: string) => {
     setActiveTable(table)
@@ -99,14 +99,12 @@ function AdminComponent() {
             <section className="aihot-admin-card">
               <div className="aihot-admin-card-head">
                 <h2>{TableLabels[data.table ?? ""] ?? data.table}</h2>
-                <span>共 {data.total} 行，第 {data.page} / {totalPages} 页</span>
+                <span>第 {data.page} / {totalPages} 页，共 {data.total} 条</span>
               </div>
               <AdminTableView tableName={data.table ?? ""} rows={data.rows} />
               <div className="aihot-admin-pager">
                 <button disabled={loading || page <= 1} onClick={() => { const next = page - 1; setPage(next); loadData(activeTable, next) }}>上一页</button>
-                <select value={pageSize} onChange={(e) => { const next = Number(e.target.value); setPageSize(next); setPage(1); loadData(activeTable, 1, undefined, next) }}>
-                  {[10, 20, 50, 100].map(size => <option key={size} value={size}>{size} 行/页</option>)}
-                </select>
+                <span className="aihot-admin-pager-info">每页 50 条</span>
                 <button disabled={loading || page >= totalPages} onClick={() => { const next = page + 1; setPage(next); loadData(activeTable, next) }}>下一页</button>
               </div>
             </section>
@@ -133,9 +131,26 @@ function AdminTableView({ tableName, rows }: { tableName: string, rows: Record<s
 function AdminCell({ column, value }: { column: string, value: unknown }) {
   const [expanded, setExpanded] = useState(false)
   const text = formatCell(column, value)
-  const collapsible = text.length > 120
-  if (!collapsible) return <pre>{text}</pre>
-  return <button className="aihot-admin-cell-toggle" onClick={() => setExpanded(v => !v)}><pre className={expanded ? "" : "collapsed"}>{text}</pre><span>{expanded ? "收起" : "展开"}</span></button>
+  const preview = previewCell(text)
+  const collapsible = preview !== text
+  if (!collapsible) return <pre title={text}>{text}</pre>
+  return (
+    <button
+      className={$("aihot-admin-cell-toggle", expanded && "expanded")}
+      title={text}
+      onClick={() => setExpanded(v => !v)}
+    >
+      <span className="aihot-admin-cell-text">{expanded ? text : preview}</span>
+      <span className="aihot-admin-cell-hint">{expanded ? "收起" : "查看"}</span>
+    </button>
+  )
+}
+
+function previewCell(text: string) {
+  const compact = text.replace(/\s+/g, " ").trim()
+  if (!compact) return ""
+  if (compact.length <= 8) return compact
+  return `${compact.slice(0, 5)}...`
 }
 
 function formatCell(column: string, value: unknown) {
