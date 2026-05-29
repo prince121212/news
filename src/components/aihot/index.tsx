@@ -1,8 +1,11 @@
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
+import { Suspense, lazy } from "react"
 import { createPortal } from "react-dom"
 import { customGroupsAtom } from "~/atoms"
 import type { CustomGroup, NewsItem, SourceCatalog, SourceID, SourceResponse } from "@shared/types"
 import "./style.css"
+
+const DotLottieReact = lazy(() => import("@lottiefiles/dotlottie-react").then(module => ({ default: module.DotLottieReact })))
 
 const FEED_COPY: Record<string, [string, string]> = {
   all: ["全部动态", "所有已选信源的最新内容"],
@@ -110,6 +113,17 @@ function normalizeGroupName(name: string) {
   return name.trim().slice(0, 5)
 }
 
+function LoadingAnimation({ label = "加载中" }: { label?: string }) {
+  return (
+    <div className="aihot-loading" role="status" aria-label={label}>
+      <Suspense fallback={<div className="aihot-loading-lottie fallback" />}>
+        <DotLottieReact src="/animations/loading.lottie" loop autoplay className="aihot-loading-lottie" />
+      </Suspense>
+      <span>{label}</span>
+    </div>
+  )
+}
+
 export function AiHotApp() {
   const { isDark, toggleDark } = useDark()
   const [feed, setFeed] = useState<Feed>("all")
@@ -210,6 +224,7 @@ function Timeline({ sources: ids, keyword }: { sources: SourceID[], keyword: str
   return (
     <section className="aihot-timeline-wrap">
       <div className="aihot-timeline">
+        {firstPage.isLoading && <LoadingAnimation label="正在加载资讯" />}
         {groupByDate(items).map((group) => {
           const isCollapsed = collapsedDays.includes(group.dateKey)
           return (
@@ -260,6 +275,7 @@ function TimelineItem({ item, source, catalogMap }: { item: NewsItem, source: So
         <a className="aihot-news-card" href={item.url} target="_blank" rel="noreferrer">
           <div className="aihot-meta">
             <div className="aihot-meta-source"><img className="aihot-avatar" src={avatar} onError={e => e.currentTarget.style.display = "none"} /> <span>{item.sourceName || info.name}</span>{!item.sourceName && info.title && <span>@ {info.title}</span>}</div>
+            <div className="aihot-tags">{tags.map(tag => <span className="aihot-tag" key={tag}>{tag}</span>)}{!item.tags?.length && !item.tag && info.type === "realtime" && <span className="aihot-tag">实时</span>}</div>
           </div>
           <h2 className="aihot-title">{item.title}</h2>
           {text && <p className="aihot-summary">{text}</p>}
@@ -267,7 +283,6 @@ function TimelineItem({ item, source, catalogMap }: { item: NewsItem, source: So
             <img src={item.coverUrl || item.videoUrl} alt="" loading="lazy" />
             {item.videoUrl && <span className="aihot-play">▶</span>}
           </div>}
-          <div className="aihot-tags">{tags.map(tag => <span className="aihot-tag" key={tag}>{tag}</span>)}{!item.tags?.length && !item.tag && info.type === "realtime" && <span className="aihot-tag">实时</span>}</div>
         </a>
       </div>
     </article>

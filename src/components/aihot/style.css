@@ -72,6 +72,8 @@ html:not(.dark) .aihot-search { background: rgba(255,255,255,.72); }
 .aihot-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 46px; height: 46px; display: grid; place-items: center; border-radius: 999px; color: white; background: rgba(2,6,23,.72); box-shadow: 0 8px 22px rgba(0,0,0,.28); }
 .aihot-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(148,163,184,.1); }
 .aihot-tag { color: var(--ai-muted); background: rgba(148,163,184,.1); border: 1px solid rgba(148,163,184,.08); padding: 4px 8px; border-radius: 7px; font-size: 12px; }
+.aihot-loading { display: grid; place-items: center; gap: 10px; min-height: 220px; border: 1px solid var(--ai-border); border-radius: 16px; background: var(--ai-panel); color: var(--ai-muted); }
+.aihot-loading-lottie { width: 160px; height: 160px; }
 
 .aihot-hot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
 .aihot-hot-card { padding: 14px; border: 1px solid var(--ai-border); border-radius: 22px; background: var(--ai-panel); }
@@ -273,11 +275,14 @@ html:not(.dark) .aihot-admin-table-wrap { background: rgba(255,255,255,.6); }
 .aihot-meta { justify-content: space-between; align-items: flex-start; gap: 12px; }
 .aihot-meta-source { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .aihot-meta-source span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.aihot-news-card .aihot-tags { margin-top: 0; padding-top: 0; border-top: 0; justify-content: flex-end; flex-shrink: 0; }
+.aihot-news-card .aihot-tags { margin-top: 0; margin-left: auto; padding-top: 0; border-top: 0; justify-content: flex-end; flex-shrink: 0; }
 @media (max-width: 760px) {
   .aihot-meta { gap: 8px; }
   .aihot-news-card .aihot-tags { gap: 6px; }
   .aihot-tag { padding: 3px 7px; font-size: 11px; }
+  .aihot-day-label { top: 70px; }
+  .aihot-loading-lottie { width: 120px; height: 120px; }
+  .aihot-meta-source span:first-of-type { max-width: 10ch; }
 }
 
 .aihot-empty, .aihot-load-more {
