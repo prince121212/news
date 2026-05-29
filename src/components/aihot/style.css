@@ -55,7 +55,7 @@ html:not(.dark) .aihot-search { background: rgba(255,255,255,.72); }
 .aihot-timeline-wrap, .aihot-hot-wrap, .aihot-settings { max-width: 1180px; margin: 0 auto; }
 .aihot-timeline { display: flex; flex-direction: column; gap: 12px; }
 .aihot-day-group { display: flex; flex-direction: column; gap: 12px; }
-.aihot-day-label { position: sticky; top: 114px; z-index: 6; display: inline-flex; align-items: center; gap: 8px; width: max-content; max-width: 100%; padding: 6px 10px; margin: 6px 0 0 38px; border: 1px solid var(--ai-border); border-radius: 999px; color: var(--ai-muted); background: var(--ai-panel-strong); backdrop-filter: blur(16px); font-size: 12px; font-weight: 800; cursor: pointer; }
+.aihot-day-label { position: sticky; top: 114px; z-index: 6; align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; width: max-content; max-width: 100%; padding: 6px 10px; margin: 6px 0 0 38px; border: 1px solid var(--ai-border); border-radius: 999px; color: var(--ai-muted); background: var(--ai-panel-strong); backdrop-filter: blur(16px); font-size: 12px; font-weight: 800; cursor: pointer; }
 .aihot-day-arrow { color: var(--ai-weak); font-size: 14px; line-height: 1; }
 .aihot-timeline-item { display: grid; grid-template-columns: 24px 1fr; gap: 14px; }
 .aihot-line { position: relative; display: flex; justify-content: center; }
@@ -132,7 +132,7 @@ html:not(.dark) .aihot-source-check { background: rgba(255,255,255,.5); }
   .aihot-mobile-title { justify-self: center; color: var(--ai-muted); font-size: 15px; }
   .aihot-mobile-actions { justify-self: end; display: flex; gap: 8px; }
   .aihot-mobile-actions button { width: 28px; height: 28px; display: grid; place-items: center; color: var(--ai-cyan); border: 1px solid rgba(34,211,238,.16); border-radius: 10px; background: rgba(34,211,238,.06); }
-  .aihot-main { padding: 14px 12px 28px; overflow: hidden; }
+  .aihot-main { padding: 14px 12px 28px; overflow: visible; }
   .aihot-hero { top: 58px; padding: 14px; margin-bottom: 14px; border-radius: 16px; }
   .aihot-hero-row { display: block; }
   .aihot-hero h1 { font-size: 24px; }
@@ -280,7 +280,7 @@ html:not(.dark) .aihot-admin-table-wrap { background: rgba(255,255,255,.6); }
   .aihot-meta { gap: 8px; }
   .aihot-news-card .aihot-tags { gap: 6px; }
   .aihot-tag { padding: 3px 7px; font-size: 11px; }
-  .aihot-day-label { top: 70px; }
+  .aihot-day-label { top: 70px; z-index: 18; }
   .aihot-loading-lottie { width: 120px; height: 120px; }
   .aihot-meta-source span:first-of-type { max-width: 10ch; }
 }
