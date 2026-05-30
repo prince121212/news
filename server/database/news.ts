@@ -1,6 +1,7 @@
 import md5 from "md5"
 import type { NewsItem, SourceID } from "@shared/types"
 import type { AppDatabase } from "#/utils/database"
+import { tranformToUTC } from "#/utils/date"
 
 type NewsItemRow = {
   id: string
@@ -30,7 +31,11 @@ function normalizeRows(res: any) {
 
 function toTime(value: unknown) {
   if (!value) return 0
-  const n = typeof value === "number" ? value : new Date(String(value)).getTime()
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0
+
+  const date = String(value).trim()
+  const hasExplicitTimezone = /(?:z|gmt|utc|[+-]\d{2}:?\d{2})$/i.test(date)
+  const n = hasExplicitTimezone ? new Date(date).getTime() : tranformToUTC(date)
   return Number.isFinite(n) ? n : 0
 }
 

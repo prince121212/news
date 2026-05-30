@@ -22,6 +22,40 @@ const TableLabels: Record<string, string> = {
 
 const HiddenColumns = new Set(["password"])
 
+const DefaultColumnWidth = 160
+
+const ColumnWidths: Record<string, number> = {
+  id: 140,
+  enabled: 96,
+  type: 120,
+  column_id: 120,
+  tag: 120,
+  tags: 180,
+  source_id: 120,
+  source_name: 160,
+  collector_source_id: 120,
+  original_id: 180,
+  title: 280,
+  username: 180,
+  name: 160,
+  home: 260,
+  url: 320,
+  mobile_url: 320,
+  icon: 260,
+  source_avatar_url: 260,
+  cover_url: 280,
+  video_url: 280,
+  summary: 360,
+  content: 420,
+  data: 420,
+  raw_extra: 360,
+  pub_date: 180,
+  fetched_at: 180,
+  updated_at: 180,
+  updated: 180,
+  created: 180,
+}
+
 const ColumnLabels: Record<string, Record<string, string>> = {
   cache: { id: "信源", data: "内容", updated: "更新时间" },
   user: { id: "编号", username: "用户名", data: "同步数据", type: "账号类型", created: "创建时间", updated: "更新时间" },
@@ -38,6 +72,7 @@ function AdminComponent() {
   const [data, setData] = useState<AdminData>()
   const [activeTable, setActiveTable] = useState("")
   const [page, setPage] = useState(1)
+  const [jumpPage, setJumpPage] = useState("1")
   const [pageSize] = useState(50)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -51,6 +86,7 @@ function AdminComponent() {
       setData(res)
       setActiveTable(res.table ?? "")
       setPage(res.page)
+      setJumpPage(String(res.page))
     } catch (e: any) {
       setError(e?.data?.message || e?.message || "读取失败")
     } finally {
@@ -66,6 +102,19 @@ function AdminComponent() {
 
   const totalPages = data ? Math.max(Math.ceil(data.total / data.pageSize), 1) : 1
 
+  const goToPage = (targetPage: number) => {
+    if (!data || loading) return
+    const next = Math.min(Math.max(Math.trunc(targetPage) || 1, 1), totalPages)
+    setPage(next)
+    setJumpPage(String(next))
+    loadData(activeTable, next)
+  }
+
+  const submitJumpPage = (e: React.FormEvent) => {
+    e.preventDefault()
+    goToPage(Number(jumpPage))
+  }
+
   return (
     <div className="aihot-app">
       <main className="aihot-admin-main">
@@ -75,8 +124,20 @@ function AdminComponent() {
             <p>数据库与系统数据查看</p>
           </div>
           <div className="aihot-admin-actions">
+            <span className="aihot-admin-version">V0.0.1</span>
             <Link to="/" className="aihot-admin-link">返回首页</Link>
-            {data && <button className="aihot-refresh" title="刷新" disabled={loading} onClick={() => loadData(activeTable, page)}>↻</button>}
+            {data && (
+              <button
+                type="button"
+                className="aihot-refresh aihot-admin-refresh"
+                title="刷新当前表格"
+                aria-label="刷新当前表格"
+                disabled={loading}
+                onClick={() => loadData(data.table ?? activeTable, data.page ?? page)}
+              >
+                ↻
+              </button>
+            )}
           </div>
         </section>
 
@@ -103,9 +164,24 @@ function AdminComponent() {
               </div>
               <AdminTableView tableName={data.table ?? ""} rows={data.rows} />
               <div className="aihot-admin-pager">
-                <button disabled={loading || page <= 1} onClick={() => { const next = page - 1; setPage(next); loadData(activeTable, next) }}>上一页</button>
+                <button disabled={loading || page <= 1} onClick={() => goToPage(1)}>首页</button>
+                <button disabled={loading || page <= 1} onClick={() => goToPage(page - 1)}>上一页</button>
                 <span className="aihot-admin-pager-info">每页 50 条</span>
-                <button disabled={loading || page >= totalPages} onClick={() => { const next = page + 1; setPage(next); loadData(activeTable, next) }}>下一页</button>
+                <form className="aihot-admin-page-jump" onSubmit={submitJumpPage}>
+                  <span>跳至</span>
+                  <input
+                    value={jumpPage}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    aria-label="跳转页码"
+                    disabled={loading}
+                    onChange={e => setJumpPage(e.target.value.replace(/\D/g, ""))}
+                  />
+                  <span>页</span>
+                  <button disabled={loading || !jumpPage}>跳转</button>
+                </form>
+                <button disabled={loading || page >= totalPages} onClick={() => goToPage(page + 1)}>下一页</button>
+                <button disabled={loading || page >= totalPages} onClick={() => goToPage(totalPages)}>尾页</button>
               </div>
             </section>
           </div>
@@ -117,10 +193,14 @@ function AdminComponent() {
 
 function AdminTableView({ tableName, rows }: { tableName: string, rows: Record<string, unknown>[] }) {
   const columns = useMemo(() => Array.from(new Set(rows.flatMap(row => Object.keys(row)))).filter(column => !HiddenColumns.has(column)), [rows])
+  const tableWidth = useMemo(() => columns.reduce((sum, column) => sum + (ColumnWidths[column] ?? DefaultColumnWidth), 0), [columns])
   if (!rows.length) return <div className="aihot-admin-empty">暂无数据</div>
   return (
     <div className="aihot-admin-table-wrap">
-      <table className="aihot-admin-table">
+      <table className="aihot-admin-table" style={{ width: tableWidth, minWidth: "100%" }}>
+        <colgroup>
+          {columns.map(column => <col key={column} style={{ width: ColumnWidths[column] ?? DefaultColumnWidth }} />)}
+        </colgroup>
         <thead><tr>{columns.map(column => <th key={column}>{ColumnLabels[tableName]?.[column] ?? column}</th>)}</tr></thead>
         <tbody>{rows.map((row, index) => <tr key={index}>{columns.map(column => <td key={column}><AdminCell column={column} value={row[column]} /></td>)}</tr>)}</tbody>
       </table>

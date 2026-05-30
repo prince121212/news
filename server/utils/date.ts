@@ -221,5 +221,9 @@ export function parseRelativeDate(date: string, timezone: string = "UTC") {
     }
   }
 
+  if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}(?:\D+\d{1,2}:\d{1,2}(?::\d{1,2})?)?$/.test(date.trim())) {
+    return dayjs.tz(date, timezone).toDate()
+  }
+
   return date
 }
