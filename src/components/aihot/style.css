@@ -354,6 +354,7 @@ html:not(.dark) .aihot-admin-page-jump input { background: rgba(255,255,255,.76)
 }
 .aihot-load-more { font-weight: 800; }
 .aihot-load-more:disabled { opacity: .6; }
+.aihot-load-more-wrap { display: flex; flex-direction: column; }
 .aihot-admin-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
 .aihot-admin-tabs button, .aihot-admin-pager button, .aihot-admin-pager select { height: 36px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--ai-border); color: var(--ai-muted); background: rgba(148,163,184,.08); }
 .aihot-admin-tabs button.active { color: var(--ai-cyan); border-color: rgba(34,211,238,.35); background: rgba(34,211,238,.12); }

@@ -339,15 +339,27 @@ function Timeline({ sources: ids, keyword, refreshSignal, onRefreshDone, onUpdat
   const pages = [firstPage.data, ...extraPages].filter(Boolean) as NewsPage[]
   const items = pages.flatMap(page => page.items)
   const nextCursor = pages.at(-1)?.nextCursor
-  const loadMore = async () => {
+  const loadMore = useCallback(async () => {
     if (!nextCursor || loadingMore) return
     setLoadingMore(true)
     try {
-      setExtraPages([...extraPages, await fetchNewsPage({ sources: ids, keyword, cursor: nextCursor, limit: 30 })])
+      const page = await fetchNewsPage({ sources: ids, keyword, cursor: nextCursor, limit: 30 })
+      setExtraPages(prev => [...prev, page])
     } finally {
       setLoadingMore(false)
     }
-  }
+  }, [nextCursor, loadingMore, ids, keyword])
+  // 触底自动加载：哨兵元素进入视口即触发 loadMore，按钮仍可手动点击兜底。
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el || !nextCursor) return
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) loadMore()
+    }, { rootMargin: "200px" })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [nextCursor, loadMore])
   return (
     <section className="aihot-timeline-wrap">
       <div className="aihot-timeline">
@@ -370,7 +382,11 @@ function Timeline({ sources: ids, keyword, refreshSignal, onRefreshDone, onUpdat
           )
         })}
         {!firstPage.isLoading && !items.length && <div className="aihot-empty">暂无信息</div>}
-        {nextCursor && <button type="button" className="aihot-load-more" disabled={loadingMore} onClick={loadMore}>{loadingMore ? "加载中" : "加载更多"}</button>}
+        {nextCursor && (
+          <div ref={sentinelRef} className="aihot-load-more-wrap">
+            <button type="button" className="aihot-load-more" disabled={loadingMore} onClick={loadMore}>{loadingMore ? "加载中" : "加载更多"}</button>
+          </div>
+        )}
       </div>
     </section>
   )
