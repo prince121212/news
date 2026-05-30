@@ -1,6 +1,6 @@
 # News refresh Cron Worker
 
-This Worker keeps the NewsNow information stream warm when no users are visiting.
+This Worker keeps the 择流 information stream warm when no users are visiting.
 It runs every 5 minutes and calls the protected Pages API:
 
 ```text

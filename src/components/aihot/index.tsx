@@ -169,7 +169,7 @@ export function AiHotApp() {
   return (
     <div className="aihot-app">
       <header className="aihot-mobile-header">
-        <button className="aihot-mobile-logo" onClick={() => setFeed("all")}>News<b>Now</b></button>
+        <button className="aihot-mobile-logo" onClick={() => setFeed("all")}>择<b>流</b></button>
         <div className="aihot-mobile-title">{title}</div>
         <div className="aihot-mobile-actions">
           <button aria-label="切换显示模式" onClick={toggleDark}>{isDark ? "☾" : "☀"}</button>
@@ -178,17 +178,17 @@ export function AiHotApp() {
       </header>
       <div className={$("aihot-drawer-backdrop", drawerOpen && "open")} onClick={() => setDrawerOpen(false)} />
       <aside className={$("aihot-drawer", drawerOpen && "open")}>
-        <div className="aihot-drawer-head"><div className="aihot-drawer-logo">News<b>Now</b></div><button className="aihot-drawer-close" aria-label="关闭" onClick={() => setDrawerOpen(false)}>×</button></div>
+        <div className="aihot-drawer-head"><div className="aihot-drawer-logo">择<b>流</b></div><button className="aihot-drawer-close" aria-label="关闭" onClick={() => setDrawerOpen(false)}>×</button></div>
         <Nav feed={feed} setFeed={(v) => { setFeed(v); setDrawerOpen(false) }} groups={groups} />
       </aside>
       <div className="aihot-shell">
         <aside className="aihot-sidebar">
-          <button className="aihot-logo" onClick={() => setFeed("all")}>News<b>Now</b></button>
+          <button className="aihot-logo" onClick={() => setFeed("all")}>择<b>流</b></button>
           <Nav feed={feed} setFeed={setFeed} groups={groups} />
           <div className="aihot-sidebar-bottom">
             <AccountAction />
             <button className="aihot-theme" onClick={toggleDark}><span>{isDark ? "☾" : "☀"}</span><span>{isDark ? "深色模式" : "浅色模式"}</span></button>
-            <div>© 2026 NewsNow</div>
+            <div>© 2026 择流</div>
           </div>
         </aside>
         <main className="aihot-main">
@@ -454,7 +454,7 @@ function Settings() {
   return <section className="aihot-settings"><div className="aihot-settings-grid">
     <div>
       <div className="aihot-settings-card"><h2>分组管理</h2><p className="aihot-hint">创建常用分组，并为每个分组选择信源。分组名最多 8 个字。</p>{!canEdit && <div className="aihot-login-tip"><span>登录后才能管理分组和同步信源设置。</span><button onClick={login}>登录 / 注册</button></div>}<div className="aihot-group-list">{groups.map(g => <div key={g.id} className={$("aihot-group-row", active?.id === g.id && "active")}><button className="aihot-group-name" onClick={() => setActiveId(g.id)}>{g.name}</button><span className="aihot-count">{g.sources.length} 个源</span><button className="aihot-delete" disabled={!canEdit} aria-label={`删除${g.name}`} onClick={() => deleteGroup(g.id)}>×</button></div>)}</div><div className="aihot-add"><input className="aihot-input" maxLength={8} disabled={!canEdit} value={name} onChange={e => setName(e.target.value)} placeholder={canEdit ? "新分组" : "请先登录"} /><button className="aihot-primary" disabled={!canEdit} onClick={addGroup}>添加</button></div></div>
-      <div className="aihot-settings-card mt-4"><h2>关于 NewsNow</h2><p className="aihot-hint">NewsNow 提供多源资讯聚合、热搜排行与个性化分组。登录后，你的分组和信源配置会自动同步。</p></div>
+      <div className="aihot-settings-card mt-4"><h2>关于 择流</h2><p className="aihot-hint">择流 提供多源资讯聚合、热搜排行与个性化分组。登录后，你的分组和信源配置会自动同步。</p></div>
     </div>
     <div className="aihot-settings-card"><h2>{active?.name ?? "分组"} · 信源</h2><p className="aihot-hint">{canEdit ? "选择这个分组中要展示的信源。" : "未登录时只能查看默认分组，登录后才可以修改。"}</p><div className="aihot-source-toolbar"><input className="aihot-input" value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="搜索信源" /><button className={$("aihot-filter", selectedOnly && "active")} onClick={() => setSelectedOnly(!selectedOnly)}>只看已选</button></div><div className="aihot-selected-strip">{active?.sources.map((id: SourceID) => <span className="aihot-tag" key={id}>{(catalog.find(s => s.id === id) ?? fallbackSource(id)).name}</span>)}</div><div className="aihot-source-grid">{filtered.map(s => <button key={s.id} disabled={!canEdit} className={$("aihot-source-check", active?.sources.includes(s.id) && "selected")} onClick={() => toggleSource(s.id)}><span className="aihot-check">{active?.sources.includes(s.id) ? "✓" : ""}</span><span>{s.name}{s.title ? ` · ${s.title}` : ""}</span></button>)}</div></div>
   </div></section>
