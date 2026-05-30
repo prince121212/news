@@ -173,8 +173,11 @@ export function AiHotApp() {
     <div className="aihot-app">
       <header className="aihot-mobile-header">
         <button type="button" className="aihot-mobile-logo" onClick={() => setFeed("all")}>
-          择
-          <b>流</b>
+          <span>
+            择
+            <b>流</b>
+          </span>
+          <span className="aihot-brand-sub">选择你的信息流</span>
         </button>
         <div className="aihot-mobile-title">{title}</div>
         <div className="aihot-mobile-actions">
@@ -189,7 +192,7 @@ export function AiHotApp() {
             择
             <b>流</b>
           </div>
-          <button type="button" className="aihot-drawer-close" aria-label="关闭" onClick={() => setDrawerOpen(false)}>×</button>
+          <span className="aihot-brand-sub">选择你的信息流</span>
         </div>
         <Nav
           feed={feed}
@@ -203,8 +206,11 @@ export function AiHotApp() {
       <div className="aihot-shell">
         <aside className="aihot-sidebar">
           <button type="button" className="aihot-logo" onClick={() => setFeed("all")}>
-            择
-            <b>流</b>
+            <span>
+              择
+              <b>流</b>
+            </span>
+            <span className="aihot-brand-sub">选择你的信息流</span>
           </button>
           <Nav feed={feed} setFeed={setFeed} groups={groups} />
           <div className="aihot-sidebar-bottom">
@@ -270,8 +276,7 @@ function Nav({ feed, setFeed, groups }: { feed: Feed, setFeed: (feed: Feed) => v
         ))}
       </div>
       <div className="aihot-nav-fixed">
-        <div className="aihot-nav-title">管理</div>
-        <button type="button" className={$("aihot-nav-item", feed === "settings" && "active")} onClick={() => setFeed("settings")}>
+        <button type="button" className={$("aihot-nav-item aihot-nav-settings", feed === "settings" && "active")} onClick={() => setFeed("settings")}>
           <span>⚙</span>
           设置
         </button>
