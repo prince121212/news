@@ -1,7 +1,7 @@
 import process from "node:process"
 import type { SourceID } from "@shared/types"
-import { getters } from "#/getters"
 import { NewsItemTable } from "#/database/news"
+import { normalizeNewsSourceIds, refreshNewsSources, scheduleNewsRefresh } from "#/utils/news-refresh"
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,28 +12,29 @@ export default defineEventHandler(async (event) => {
       keyword?: string
       refresh?: boolean
     }>(event)
-    const sourceIds = [...new Set((body.sources ?? [])
-      .filter(id => sources[id] && getters[id] && sources[id].type !== "hottest"))] as SourceID[]
+    const sourceIds = normalizeNewsSourceIds(body.sources)
 
     const db = useAppDatabase()
     if (!db) throw new Error("db is not defined")
     const newsTable = new NewsItemTable(db)
     if (process.env.INIT_TABLE !== "false") await newsTable.init()
 
-    await Promise.allSettled(sourceIds.map(async (id) => {
-      const lastFetchedAt = await newsTable.getLastFetchedAt(id)
-      const stale = body.refresh || !lastFetchedAt || Date.now() - lastFetchedAt > sources[id].interval
-      if (!stale) return
-      const data = (await getters[id]()).slice(0, 100)
-      await newsTable.upsertItems(id, data)
-    }))
-
-    return await newsTable.query({
+    const result = await newsTable.query({
       sourceIds,
       limit: body.limit ?? 30,
       cursor: body.cursor,
       keyword: body.keyword,
     })
+
+    if (!body.cursor) {
+      scheduleNewsRefresh(event, refreshNewsSources({
+        db,
+        sourceIds,
+        force: body.refresh,
+      }))
+    }
+
+    return result
   } catch (e) {
     logger.error(e)
     throw createError({

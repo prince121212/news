@@ -1,0 +1,12 @@
+name = "newsnow-refresh-cron"
+main = "worker.ts"
+compatibility_date = "2026-05-30"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+# Replace with your production domain.
+NEWS_REFRESH_URL = "https://news-eb0.pages.dev/api/news/refresh"
+# Set NEWS_REFRESH_TOKEN as a Worker secret, do not commit real values:
+# wrangler secret put NEWS_REFRESH_TOKEN -c workers/news-refresh/wrangler.toml

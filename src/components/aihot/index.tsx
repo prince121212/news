@@ -203,6 +203,8 @@ function Timeline({ sources: ids, keyword }: { sources: SourceID[], keyword: str
     queryKey: ["news", sourceKey, keyword],
     queryFn: () => fetchNewsPage({ sources: ids, keyword, limit: 30 }),
     enabled: ids.length > 0,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
     retry: false,
   })
   useEffect(() => {

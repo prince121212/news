@@ -88,6 +88,8 @@ function rowToItem(row: NewsItemRow): NewsItem & { source: SourceID, sourceId: S
   }
 }
 
+let initPromise: Promise<void> | undefined
+
 export class NewsItemTable {
   private db
   constructor(db: AppDatabase) {
@@ -95,6 +97,14 @@ export class NewsItemTable {
   }
 
   async init() {
+    initPromise ??= this.doInit().catch((error) => {
+      initPromise = undefined
+      throw error
+    })
+    return initPromise
+  }
+
+  private async doInit() {
     await this.db.prepare(`
       CREATE TABLE IF NOT EXISTS news_item (
         id TEXT PRIMARY KEY,
@@ -224,6 +234,18 @@ export class NewsItemTable {
     return Number(row?.fetched_at ?? 0)
   }
 
+  async getLastFetchedAtMap(sourceIds: SourceID[]) {
+    if (!sourceIds.length) return new Map<SourceID, number>()
+    const rows = normalizeRows(await this.db.prepare(`
+      SELECT source_id, MAX(fetched_at) AS fetched_at
+      FROM news_item
+      WHERE source_id IN (${sourceIds.map(() => "?").join(",")})
+      GROUP BY source_id
+    `).all(...sourceIds)) as { source_id: SourceID, fetched_at?: number }[]
+
+    return new Map(rows.map(row => [row.source_id, Number(row.fetched_at ?? 0)]))
+  }
+
   async query(options: { sourceIds: SourceID[], limit: number, cursor?: number, keyword?: string }) {
     const ids = options.sourceIds
     if (!ids.length) return { items: [], nextCursor: undefined }
@@ -231,7 +253,7 @@ export class NewsItemTable {
     const clauses = [`source_id IN (${ids.map(() => "?").join(",")})`]
     const params: unknown[] = [...ids]
     if (options.cursor) {
-      clauses.push(`COALESCE(pub_date, fetched_at) < ?`)
+      clauses.push(`pub_date < ?`)
       params.push(options.cursor)
     }
     if (options.keyword?.trim()) {
@@ -243,7 +265,7 @@ export class NewsItemTable {
     const rows = normalizeRows(await this.db.prepare(`
       SELECT * FROM news_item
       WHERE ${clauses.join(" AND ")}
-      ORDER BY COALESCE(pub_date, fetched_at) DESC, fetched_at DESC
+      ORDER BY pub_date DESC, fetched_at DESC
       LIMIT ?
     `).all(...params)) as NewsItemRow[]
     const pageRows = rows.slice(0, limit)
