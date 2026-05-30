@@ -386,7 +386,7 @@ function Timeline({ sources: ids, keyword, refreshSignal, onRefreshDone, onUpdat
                 onClick={() => setCollapsedDays(days => days.includes(group.dateKey) ? days.filter(day => day !== group.dateKey) : [...days, group.dateKey])}
               >
                 <span>{group.label}</span>
-                <span className="aihot-day-arrow">{isCollapsed ? "›" : "⌄"}</span>
+                <span className={$("aihot-day-arrow", isCollapsed ? "i-ph:caret-right-bold" : "i-ph:caret-down-bold")} />
               </button>
               {!isCollapsed && group.items.map(item => <TimelineItem key={`${item.sourceId}-${item.id}`} item={item} source={item.sourceId ?? item.source!} catalogMap={catalogMap} />)}
             </div>

@@ -75,7 +75,7 @@ html:not(.dark) .aihot-search { background: rgba(255,255,255,.72); }
 .aihot-timeline { display: flex; flex-direction: column; gap: 12px; }
 .aihot-day-group { display: flex; flex-direction: column; gap: 12px; }
 .aihot-day-label { position: sticky; top: 114px; z-index: 6; align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; width: max-content; max-width: 100%; padding: 6px 10px; margin: 6px 0 0 38px; border: 1px solid var(--ai-border); border-radius: 999px; color: var(--ai-muted); background: var(--ai-panel-strong); backdrop-filter: blur(16px); font-size: 12px; font-weight: 800; cursor: pointer; }
-.aihot-day-arrow { color: var(--ai-weak); font-size: 14px; line-height: 1; }
+.aihot-day-arrow { display: inline-flex; width: 14px; height: 14px; color: var(--ai-weak); }
 .aihot-timeline-item { display: grid; grid-template-columns: 24px 1fr; gap: 14px; }
 .aihot-line { position: relative; display: flex; justify-content: center; }
 .aihot-line::before { content: ""; position: absolute; top: 0; bottom: -12px; width: 1px; background: rgba(148, 163, 184, .25); }
