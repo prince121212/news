@@ -1,7 +1,7 @@
 import process from "node:process"
 import type { SourceID } from "@shared/types"
 import { NewsItemTable } from "#/database/news"
-import { normalizeNewsSourceIds, refreshNewsSources, scheduleNewsRefresh } from "#/utils/news-refresh"
+import { refreshNewsSources, resolveNewsSourceIds, scheduleNewsRefresh } from "#/utils/news-refresh"
 
 export default defineEventHandler(async (event) => {
   try {
@@ -12,10 +12,9 @@ export default defineEventHandler(async (event) => {
       keyword?: string
       refresh?: boolean
     }>(event)
-    const sourceIds = normalizeNewsSourceIds(body.sources)
-
     const db = useAppDatabase()
     if (!db) throw new Error("db is not defined")
+    const sourceIds = await resolveNewsSourceIds(db, body.sources)
     const newsTable = new NewsItemTable(db)
     if (process.env.INIT_TABLE !== "false") await newsTable.init()
 
