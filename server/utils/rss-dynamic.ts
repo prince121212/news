@@ -1,3 +1,4 @@
+import process from "node:process"
 import type { NewsItem } from "@shared/types"
 import type { RssSourceRow } from "#/database/rss-source"
 
@@ -50,7 +51,7 @@ export function rssItemsToNews(source: RssSourceRow, items: any[], limit = 50): 
       sourceName: source.title ? `${source.name} · ${source.title}` : source.name,
       sourceAvatarUrl: source.icon,
       summary: description,
-      coverUrl: item.itunes_image?.href || item.itunes_image?.url || source.icon,
+      coverUrl: item.itunes_image?.href || item.itunes_image?.url || undefined,
       pubDate: item.created,
       tag: source.name,
       tags: [source.name, "RSS"],
