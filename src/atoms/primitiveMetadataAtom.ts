@@ -52,6 +52,10 @@ export function createDefaultCustomGroups(): CustomGroup[] {
     "v2ex-share",
   ].filter(id => sources[id as SourceID]) as SourceID[])
   const entertainment: SourceID[] = []
+  const podcast = normalizeSources([
+    "ximalaya-kuayangreyi",
+    "xiaoyuzhou-sulachigua",
+  ].filter(id => sources[id as SourceID]) as SourceID[])
   const military = normalizeSources([
     "sputniknewscn",
     "cankaoxiaoxi",
@@ -61,6 +65,7 @@ export function createDefaultCustomGroups(): CustomGroup[] {
     { id: "tech", name: "科技", sources: normalizeSources(tech) },
     { id: "finance", name: "财经", sources: normalizeSources(finance) },
     { id: "ent", name: "娱乐", sources: entertainment },
+    { id: "podcast", name: "播客", sources: podcast },
     { id: "ai", name: "AI", sources: ai },
     { id: "military", name: "军事", sources: military },
   ]
