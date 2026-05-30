@@ -39,7 +39,7 @@ export function createDefaultCustomGroups(): CustomGroup[] {
 
 export function sanitizeDefaultGroups(groups: CustomGroup[] = []) {
   return groups.map((group, index) => {
-    const id = String(group.id || `group-${index + 1}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || `group-${index + 1}`
+    const id = String(group.id || `group-${index + 1}`).replace(/[^\w-]/g, "").slice(0, 40) || `group-${index + 1}`
     return {
       id,
       name: String(group.name || "分组").trim().slice(0, 8),

@@ -2,7 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import type { CustomGroup, SourceCatalog, SourceID } from "@shared/types"
 import "~/components/aihot/style.css"
 
-type AdminData = {
+interface AdminData {
   updatedTime: number
   tableNames: string[]
   table?: string
@@ -96,6 +96,8 @@ function AdminComponent() {
     } finally {
       setLoading(false)
     }
+    // pageSize 为固定常量，无需纳入依赖。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTable, page, password, username])
 
   const switchTable = (table: string) => {
@@ -148,29 +150,46 @@ function AdminComponent() {
         {!data && (
           <form className="aihot-admin-login" onSubmit={e => loadData(activeTable, 1, e)}>
             <h2>管理员登录</h2>
-            <label className="aihot-field"><span>账号</span><input value={username} autoFocus onChange={e => setUsername(e.target.value)} /></label>
-            <label className="aihot-field"><span>密码</span><input value={password} type="password" onChange={e => setPassword(e.target.value)} /></label>
+            <label className="aihot-field">
+              <span>账号</span>
+              <input value={username} autoFocus onChange={e => setUsername(e.target.value)} />
+            </label>
+            <label className="aihot-field">
+              <span>密码</span>
+              <input value={password} type="password" onChange={e => setPassword(e.target.value)} />
+            </label>
             {error && <div className="aihot-error">{error}</div>}
-            <button className="aihot-admin-submit" disabled={loading}>{loading ? "读取中" : "进入管理后台"}</button>
+            <button type="submit" className="aihot-admin-submit" disabled={loading}>{loading ? "读取中" : "进入管理后台"}</button>
           </form>
         )}
 
         {data && (
           <div className="aihot-admin-tables">
             <div className="aihot-admin-tabs">
-              {data.tableNames.map(table => <button key={table} className={$(activeTable === table && "active")} disabled={loading} onClick={() => switchTable(table)}>{TableLabels[table] ?? table}</button>)}
+              {data.tableNames.map(table => <button type="button" key={table} className={$(activeTable === table && "active")} disabled={loading} onClick={() => switchTable(table)}>{TableLabels[table] ?? table}</button>)}
             </div>
             {error && <div className="aihot-error">{error}</div>}
             <AdminDefaultGroups username={username} password={password} />
             <section className="aihot-admin-card">
               <div className="aihot-admin-card-head">
                 <h2>{TableLabels[data.table ?? ""] ?? data.table}</h2>
-                <span>第 {data.page} / {totalPages} 页，共 {data.total} 条</span>
+                <span>
+                  第
+                  {data.page}
+                  {" "}
+                  /
+                  {totalPages}
+                  {" "}
+                  页，共
+                  {data.total}
+                  {" "}
+                  条
+                </span>
               </div>
               <AdminTableView tableName={data.table ?? ""} rows={data.rows} />
               <div className="aihot-admin-pager">
-                <button disabled={loading || page <= 1} onClick={() => goToPage(1)}>首页</button>
-                <button disabled={loading || page <= 1} onClick={() => goToPage(page - 1)}>上一页</button>
+                <button type="button" disabled={loading || page <= 1} onClick={() => goToPage(1)}>首页</button>
+                <button type="button" disabled={loading || page <= 1} onClick={() => goToPage(page - 1)}>上一页</button>
                 <span className="aihot-admin-pager-info">每页 50 条</span>
                 <form className="aihot-admin-page-jump" onSubmit={submitJumpPage}>
                   <span>跳至</span>
@@ -183,10 +202,10 @@ function AdminComponent() {
                     onChange={e => setJumpPage(e.target.value.replace(/\D/g, ""))}
                   />
                   <span>页</span>
-                  <button disabled={loading || !jumpPage}>跳转</button>
+                  <button type="submit" disabled={loading || !jumpPage}>跳转</button>
                 </form>
-                <button disabled={loading || page >= totalPages} onClick={() => goToPage(page + 1)}>下一页</button>
-                <button disabled={loading || page >= totalPages} onClick={() => goToPage(totalPages)}>尾页</button>
+                <button type="button" disabled={loading || page >= totalPages} onClick={() => goToPage(page + 1)}>下一页</button>
+                <button type="button" disabled={loading || page >= totalPages} onClick={() => goToPage(totalPages)}>尾页</button>
               </div>
             </section>
           </div>
@@ -196,8 +215,8 @@ function AdminComponent() {
   )
 }
 
-
 function AdminDefaultGroups({ username, password }: { username: string, password: string }) {
+  const confirm = useConfirm()
   const [groups, setGroups] = useState<CustomGroup[]>([])
   const [catalog, setCatalog] = useState<SourceCatalog[]>([])
   const [activeId, setActiveId] = useState("")
@@ -229,7 +248,9 @@ function AdminDefaultGroups({ username, password }: { username: string, password
     }
   }, [password, username])
 
-  useEffect(() => { loadGroups() }, [loadGroups])
+  useEffect(() => {
+    loadGroups()
+  }, [loadGroups])
 
   const addRssSource = async () => {
     if (!rssUrl.trim()) return
@@ -278,9 +299,9 @@ function AdminDefaultGroups({ username, password }: { username: string, password
     setGroups(groups.map(group => group.id === active.id ? { ...group, ...patch } : group))
   }
 
-  const deleteGroup = (id: string) => {
+  const deleteGroup = async (id: string) => {
     const group = groups.find(item => item.id === id)
-    if (!group || !confirm(`确认删除默认分组「${group.name}」？`)) return
+    if (!group || !await confirm(`确认删除默认分组「${group.name}」？`)) return
     const next = groups.filter(item => item.id !== id)
     setGroups(next)
     setActiveId(next[0]?.id ?? "")
@@ -297,7 +318,7 @@ function AdminDefaultGroups({ username, password }: { username: string, password
   }
 
   const sourceList = catalog.filter(source => !source.redirect && source.type !== "hottest")
-  const filteredSources = sourceList.filter(source => {
+  const filteredSources = sourceList.filter((source) => {
     const text = `${source.id}${source.name}${source.title ?? ""}`.toLowerCase()
     const matched = !keyword || text.includes(keyword.toLowerCase())
     const selected = !!active?.sources.includes(source.id)
@@ -319,8 +340,8 @@ function AdminDefaultGroups({ username, password }: { username: string, password
           <span>修改默认分组名称、顺序和每组默认信源。保存后影响新用户/未初始化用户。</span>
         </div>
         <div className="aihot-admin-actions">
-          <button className="aihot-admin-link" disabled={loading} onClick={loadGroups}>重载</button>
-          <button className="aihot-admin-save" disabled={loading} onClick={saveGroups}>{loading ? "处理中" : "保存默认分组"}</button>
+          <button type="button" className="aihot-admin-link" disabled={loading} onClick={loadGroups}>重载</button>
+          <button type="button" className="aihot-admin-save" disabled={loading} onClick={saveGroups}>{loading ? "处理中" : "保存默认分组"}</button>
         </div>
       </div>
       {message && <div className="aihot-admin-message">{message}</div>}
@@ -333,32 +354,56 @@ function AdminDefaultGroups({ username, password }: { username: string, password
           <option value="tech">科技</option>
           <option value="finance">财经</option>
         </select>
-        <button className="aihot-admin-save" disabled={loading || !rssUrl.trim()} onClick={addRssSource}>校验并添加 RSS 信源</button>
+        <button type="button" className="aihot-admin-save" disabled={loading || !rssUrl.trim()} onClick={addRssSource}>校验并添加 RSS 信源</button>
       </div>
       <div className="aihot-admin-default-grid">
         <div className="aihot-admin-default-side">
           <div className="aihot-group-list">
-            {groups.map((group, index) => <div key={group.id} className={$("aihot-group-row", active?.id === group.id && "active")}>
-              <button className="aihot-group-name" onClick={() => setActiveId(group.id)}>{group.name}</button>
-              <span className="aihot-count">{group.sources.length} 源</span>
-              <button className="aihot-mini" disabled={index === 0} onClick={() => moveGroup(group.id, -1)}>↑</button>
-              <button className="aihot-mini" disabled={index === groups.length - 1} onClick={() => moveGroup(group.id, 1)}>↓</button>
-              <button className="aihot-delete" aria-label={`删除${group.name}`} onClick={() => deleteGroup(group.id)}>×</button>
-            </div>)}
+            {groups.map((group, index) => (
+              <div key={group.id} className={$("aihot-group-row", active?.id === group.id && "active")}>
+                <button type="button" className="aihot-group-name" onClick={() => setActiveId(group.id)}>{group.name}</button>
+                <span className="aihot-count">
+                  {group.sources.length}
+                  {" "}
+                  源
+                </span>
+                <button type="button" className="aihot-mini" disabled={index === 0} onClick={() => moveGroup(group.id, -1)}>↑</button>
+                <button type="button" className="aihot-mini" disabled={index === groups.length - 1} onClick={() => moveGroup(group.id, 1)}>↓</button>
+                <button type="button" className="aihot-delete" aria-label={`删除${group.name}`} onClick={() => deleteGroup(group.id)}>×</button>
+              </div>
+            ))}
           </div>
           <div className="aihot-add">
             <input className="aihot-input" maxLength={8} value={newName} onChange={e => setNewName(e.target.value)} placeholder="新默认分组" />
-            <button className="aihot-primary" onClick={addGroup}>添加</button>
+            <button type="button" className="aihot-primary" onClick={addGroup}>添加</button>
           </div>
         </div>
         <div className="aihot-admin-default-editor">
           {active
-            ? <>
-                <label className="aihot-field compact"><span>分组名</span><input maxLength={8} value={active.name} onChange={e => updateActive({ name: e.target.value.slice(0, 8) })} /></label>
-                <div className="aihot-source-toolbar"><input className="aihot-input" value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="搜索信源" /><button className={$("aihot-filter", selectedOnly && "active")} onClick={() => setSelectedOnly(!selectedOnly)}>只看已选</button></div>
-                <div className="aihot-selected-strip">{active.sources.map(id => <span className="aihot-tag" key={id}>{catalog.find(source => source.id === id)?.name ?? id}</span>)}</div>
-                <div className="aihot-source-grid admin">{filteredSources.map(source => <button key={source.id} className={$("aihot-source-check", active.sources.includes(source.id) && "selected")} onClick={() => toggleSource(source.id)}><span className="aihot-check">{active.sources.includes(source.id) ? "✓" : ""}</span><span>{source.name}{source.title ? ` · ${source.title}` : ""}</span></button>)}</div>
-              </>
+            ? (
+                <>
+                  <label className="aihot-field compact">
+                    <span>分组名</span>
+                    <input maxLength={8} value={active.name} onChange={e => updateActive({ name: e.target.value.slice(0, 8) })} />
+                  </label>
+                  <div className="aihot-source-toolbar">
+                    <input className="aihot-input" value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="搜索信源" />
+                    <button type="button" className={$("aihot-filter", selectedOnly && "active")} onClick={() => setSelectedOnly(!selectedOnly)}>只看已选</button>
+                  </div>
+                  <div className="aihot-selected-strip">{active.sources.map(id => <span className="aihot-tag" key={id}>{catalog.find(source => source.id === id)?.name ?? id}</span>)}</div>
+                  <div className="aihot-source-grid admin">
+                    {filteredSources.map(source => (
+                      <button type="button" key={source.id} className={$("aihot-source-check", active.sources.includes(source.id) && "selected")} onClick={() => toggleSource(source.id)}>
+                        <span className="aihot-check">{active.sources.includes(source.id) ? "✓" : ""}</span>
+                        <span>
+                          {source.name}
+                          {source.title ? ` · ${source.title}` : ""}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )
             : <div className="aihot-admin-empty">暂无默认分组，请先添加。</div>}
         </div>
       </div>
@@ -380,6 +425,7 @@ function AdminTableView({ tableName, rows }: { tableName: string, rows: Record<s
           {columns.map(column => <col key={column} style={{ width: ColumnWidths[column] ?? DefaultColumnWidth }} />)}
         </colgroup>
         <thead><tr>{columns.map(column => <th key={column}>{ColumnLabels[tableName]?.[column] ?? column}</th>)}</tr></thead>
+        {/* eslint-disable-next-line react/no-array-index-key */}
         <tbody>{rows.map((row, index) => <tr key={index}>{columns.map(column => <td key={column}><AdminCell column={column} value={row[column]} /></td>)}</tr>)}</tbody>
       </table>
     </div>
@@ -394,6 +440,7 @@ function AdminCell({ column, value }: { column: string, value: unknown }) {
   if (!collapsible) return <pre title={text}>{text}</pre>
   return (
     <button
+      type="button"
       className={$("aihot-admin-cell-toggle", expanded && "expanded")}
       title={text}
       onClick={() => setExpanded(v => !v)}
@@ -415,7 +462,11 @@ function formatCell(column: string, value: unknown) {
   if (value === null || value === undefined) return ""
   if (["updated", "created", "updated_at", "fetched_at", "pub_date"].includes(column) && typeof value === "number") return new Date(value).toLocaleString("zh-CN")
   if (typeof value === "string") {
-    try { return JSON.stringify(JSON.parse(value), null, 2) } catch { return value }
+    try {
+      return JSON.stringify(JSON.parse(value), null, 2)
+    } catch {
+      return value
+    }
   }
   return JSON.stringify(value, null, 2)
 }

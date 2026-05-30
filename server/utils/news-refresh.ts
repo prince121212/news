@@ -7,7 +7,7 @@ import { RssSourceTable } from "#/database/rss-source"
 import { rssItemsToNews, validateRssUrl } from "#/utils/rss-dynamic"
 import type { AppDatabase } from "#/utils/database"
 
-export type NewsRefreshResult = {
+export interface NewsRefreshResult {
   total: number
   refreshed: SourceID[]
   skipped: SourceID[]

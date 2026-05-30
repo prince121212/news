@@ -1,19 +1,19 @@
 import process from "node:process"
 import { $fetch } from "ofetch"
 
-type D1QueryResult = {
+interface D1QueryResult {
   results?: unknown[]
   success?: boolean
   meta?: Record<string, unknown>
 }
 
-type D1QueryResponse = {
+interface D1QueryResponse {
   success: boolean
   errors?: { message?: string }[]
   result?: D1QueryResult[]
 }
 
-export type AppDatabase = {
+export interface AppDatabase {
   prepare: (sql: string) => {
     all: (...params: any[]) => Promise<any>
     get: (...params: any[]) => Promise<any>

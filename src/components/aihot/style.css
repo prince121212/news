@@ -261,6 +261,12 @@ html:not(.dark) .aihot-source-check { background: rgba(255,255,255,.5); }
 .aihot-modal-head h2 { margin: 0; font-size: 20px; }
 .aihot-modal-head p { margin: 4px 0 0; color: var(--ai-muted); font-size: 13px; }
 .aihot-modal-head button { width: 32px; height: 32px; border-radius: 12px; color: var(--ai-muted); border: 1px solid var(--ai-border); background: rgba(148,163,184,.08); font-size: 22px; }
+.aihot-confirm-modal { width: min(360px, 100%); padding: 22px; border-radius: 20px; border: 1px solid var(--ai-border); background: var(--ai-panel-strong); color: var(--ai-text); box-shadow: 0 24px 90px rgba(0,0,0,.35); }
+.aihot-confirm-msg { margin: 0 0 20px; font-size: 15px; line-height: 1.6; }
+.aihot-confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.aihot-confirm-actions button { height: 40px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+.aihot-confirm-cancel { color: var(--ai-muted); border: 1px solid var(--ai-border); background: rgba(148,163,184,.08); }
+.aihot-confirm-ok { color: white; background: var(--ai-red); }
 .aihot-field { display: grid; gap: 7px; margin-bottom: 12px; color: var(--ai-muted); font-size: 13px; }
 .aihot-field input { height: 42px; border-radius: 13px; border: 1px solid var(--ai-border); outline: none; padding: 0 12px; background: rgba(15, 23, 42, .35); color: var(--ai-text); }
 html:not(.dark) .aihot-field input { background: rgba(255,255,255,.76); }

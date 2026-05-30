@@ -5,6 +5,7 @@ import { TanStackRouterDevtools } from "@tanstack/router-devtools"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import type { QueryClient } from "@tanstack/react-query"
 import { Toast } from "~/components/common/toast"
+import { ConfirmDialog } from "~/components/common/confirm"
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
@@ -27,6 +28,7 @@ function RootComponent() {
     <>
       <Outlet />
       <Toast />
+      <ConfirmDialog />
       {import.meta.env.DEV && (
         <>
           <ReactQueryDevtools buttonPosition="bottom-left" />

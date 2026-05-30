@@ -1,7 +1,7 @@
 import * as cheerio from "cheerio"
 import type { NewsItem } from "@shared/types"
 
-type AihotPublicItem = {
+interface AihotPublicItem {
   id?: string
   title?: string
   url?: string
@@ -16,13 +16,13 @@ type AihotPublicItem = {
   videoUrl?: string
 }
 
-type AihotPublicResponse = {
+interface AihotPublicResponse {
   items?: AihotPublicItem[]
   hasNext?: boolean
   nextCursor?: string
 }
 
-type AihotPageMeta = {
+interface AihotPageMeta {
   sourceAvatarUrl?: string
   coverUrl?: string
   videoUrl?: string
@@ -64,14 +64,14 @@ async function getAihotPageMeta() {
 
 function normalizeCategory(category?: string) {
   const map: Record<string, string> = {
-    paper: "论文",
-    tip: "观点",
+    "paper": "论文",
+    "tip": "观点",
     "ai-products": "产品",
-    product: "产品",
-    model: "模型",
-    funding: "融资",
-    open_source: "开源",
-    opensource: "开源",
+    "product": "产品",
+    "model": "模型",
+    "funding": "融资",
+    "open_source": "开源",
+    "opensource": "开源",
   }
   return category ? (map[category] ?? category) : ""
 }
@@ -128,6 +128,6 @@ const selected = defineSource(async () => {
 })
 
 export default defineSource({
-  aihot: all,
+  "aihot": all,
   "aihot-selected": selected,
 })

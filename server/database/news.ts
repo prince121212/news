@@ -3,7 +3,7 @@ import type { NewsItem, SourceID } from "@shared/types"
 import type { AppDatabase } from "#/utils/database"
 import { tranformToUTC } from "#/utils/date"
 
-type NewsItemRow = {
+interface NewsItemRow {
   id: string
   source_id: SourceID
   source_name?: string
@@ -59,6 +59,17 @@ function getCoverUrl(item: NewsItem) {
 
 function getVideoUrl(item: NewsItem) {
   return item.videoUrl
+}
+
+// 硬规则：判定一条新闻是否为垃圾内容（广告、乱码、数据源异常）。
+// 标题剥离 HTML 标签与实体后，可读文字过少或标签字符占比过高即视为垃圾，直接丢弃。
+function isJunkContent(item: NewsItem) {
+  const raw = item.title ?? ""
+  if (!raw) return true
+  const stripped = raw.replace(/<[^>]+>/g, "").replace(/&[a-z#0-9]+;/gi, " ").trim()
+  if (stripped.length < 4) return true
+  if (raw.length > 0 && (raw.length - stripped.length) / raw.length > 0.5) return true
+  return false
 }
 
 function itemKey(item: NewsItem) {
@@ -133,9 +144,19 @@ export class NewsItemTable {
     await this.db.prepare(`CREATE INDEX IF NOT EXISTS idx_news_item_source_time ON news_item(source_id, pub_date DESC, fetched_at DESC);`).run()
     await this.db.prepare(`CREATE INDEX IF NOT EXISTS idx_news_item_time ON news_item(pub_date DESC, fetched_at DESC);`).run()
     await this.ensureUniqueUrlIndex()
+    await this.purgeJunkItems()
     logger.success("init news item table")
   }
 
+  // 清理存量垃圾：标题以 HTML 标签开头（广告/异常内容），新规则上线前已入库的残留。
+  private async purgeJunkItems() {
+    const res: any = await this.db.prepare(`
+      DELETE FROM news_item
+      WHERE trim(title) GLOB '<[a-zA-Z]*>*' OR trim(title) GLOB '<[a-zA-Z]* *'
+    `).run()
+    const changes = res?.changes ?? res?.rowsAffected
+    if (changes) logger.success(`purged ${changes} junk news items`)
+  }
 
   private async ensureUniqueUrlIndex() {
     const duplicateRows = normalizeRows(await this.db.prepare(`
@@ -180,6 +201,10 @@ export class NewsItemTable {
     const now = Date.now()
     for (const item of items) {
       if (!item.title || !item.url) continue
+      if (isJunkContent(item)) {
+        logger.warn(`skip junk item from ${sourceId}: ${item.title.slice(0, 60)}`)
+        continue
+      }
       const pubDate = toTime(item.pubDate || item.extra?.date) || now
       const visibleSourceId = item.sourceId ?? sourceId
       const collector = item.sourceId && item.sourceId !== sourceId ? sourceId : collectorSourceId

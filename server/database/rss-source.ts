@@ -2,7 +2,7 @@ import md5 from "md5"
 import type { SourceCatalog, SourceID } from "@shared/types"
 import type { AppDatabase } from "#/utils/database"
 
-export type RssSourceRow = {
+export interface RssSourceRow {
   id: SourceID
   name: string
   title?: string

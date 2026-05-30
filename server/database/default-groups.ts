@@ -43,7 +43,7 @@ export class DefaultGroupTable {
   private async sanitizeGroups(groups: CustomGroup[] = []) {
     const valid = await this.validSourceIds()
     return groups.map((group, index) => ({
-      id: String(group.id || `group-${index + 1}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || `group-${index + 1}`,
+      id: String(group.id || `group-${index + 1}`).replace(/[^\w-]/g, "").slice(0, 40) || `group-${index + 1}`,
       name: String(group.name || "分组").trim().slice(0, 8),
       sources: [...new Set((group.sources ?? [])
         .filter(Boolean)

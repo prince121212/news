@@ -60,7 +60,6 @@ export interface OriginSource extends Partial<Omit<Source, "name" | "redirect">>
   } & Partial<Omit<Source, "title" | "name" | "redirect">>>
 }
 
-
 export interface SourceCatalog {
   id: SourceID
   name: string

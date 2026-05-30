@@ -88,5 +88,7 @@ export function useSync() {
       }
     }
     fn()
+    // 仅在登录态(jwt)变化时触发一次同步；其余依赖为稳定引用，纳入会导致重复同步。
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jwt])
 }
