@@ -342,3 +342,15 @@ html:not(.dark) .aihot-admin-page-jump input { background: rgba(255,255,255,.76)
 .aihot-admin-tabs button.active { color: var(--ai-cyan); border-color: rgba(34,211,238,.35); background: rgba(34,211,238,.12); }
 .aihot-admin-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 14px; }
 .aihot-admin-pager button:disabled { opacity: .45; }
+.aihot-admin-save { height: 34px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 12px; color: #06202a; background: linear-gradient(135deg,#22d3ee,#34d399); font-weight: 900; }
+.aihot-admin-save:disabled { opacity: .55; }
+.aihot-admin-message { margin-bottom: 12px; padding: 9px 10px; border-radius: 12px; color: var(--ai-muted); background: rgba(34,211,238,.08); border: 1px solid rgba(34,211,238,.12); font-size: 13px; }
+.aihot-admin-default-grid { display: grid; grid-template-columns: 360px 1fr; gap: 16px; min-width: 0; }
+.aihot-admin-default-side, .aihot-admin-default-editor { min-width: 0; }
+.aihot-mini { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; color: var(--ai-muted); border: 1px solid var(--ai-border); background: rgba(148,163,184,.08); }
+.aihot-mini:disabled { opacity: .35; }
+.aihot-field.compact { margin-bottom: 10px; }
+.aihot-source-grid.admin { max-height: 360px; overflow: auto; padding-right: 4px; }
+@media (max-width: 860px) {
+  .aihot-admin-default-grid { grid-template-columns: 1fr; }
+}

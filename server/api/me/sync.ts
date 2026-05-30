@@ -5,7 +5,7 @@ import { UserTable } from "#/database/user"
 function sanitizeCustomGroups(groups: any[] = []) {
   return groups.map(group => ({
     id: String(group?.id || randomUUID()),
-    name: String(group?.name || "分组").slice(0, 5),
+    name: String(group?.name || "分组").slice(0, 8),
     sources: Array.from(new Set((Array.isArray(group?.sources) ? group.sources : [])
       .filter((id: string) => (sources as Record<string, any>)[id] && (sources as Record<string, any>)[id].type !== "hottest"))),
   }))

@@ -2,6 +2,7 @@ import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Suspense, lazy } from "react"
 import { createPortal } from "react-dom"
 import { customGroupsAtom } from "~/atoms"
+import { primitiveMetadataAtom } from "~/atoms/primitiveMetadataAtom"
 import type { CustomGroup, NewsItem, SourceCatalog, SourceID, SourceResponse } from "@shared/types"
 import "./style.css"
 
@@ -110,7 +111,7 @@ function useSourceQueries(ids: SourceID[]) {
 }
 
 function normalizeGroupName(name: string) {
-  return name.trim().slice(0, 5)
+  return name.trim().slice(0, 8)
 }
 
 function LoadingAnimation({ label = "加载中" }: { label?: string }) {
@@ -129,7 +130,23 @@ export function AiHotApp() {
   const [feed, setFeed] = useState<Feed>("all")
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [timelineKeyword, setTimelineKeyword] = useState("")
-  const groups = useAtomValue(customGroupsAtom)
+  const [primitiveMetadata, setPrimitiveMetadata] = useAtom(primitiveMetadataAtom)
+  const groups = primitiveMetadata.customGroups
+  const defaultGroups = useQuery({
+    queryKey: ["default-groups"],
+    queryFn: () => myFetch<CustomGroup[]>("/default-groups"),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  })
+  useEffect(() => {
+    if (primitiveMetadata.updatedTime !== 0 || !defaultGroups.data?.length) return
+    setPrimitiveMetadata({
+      ...primitiveMetadata,
+      customGroups: defaultGroups.data,
+      updatedTime: Date.now(),
+      action: "sync",
+    })
+  }, [defaultGroups.data, primitiveMetadata, setPrimitiveMetadata])
 
   const activeGroup = feed.startsWith("group:") ? groups.find(g => g.id === feed.slice(6)) : undefined
   const title = feed === "settings" ? FEED_COPY.settings[0] : activeGroup?.name || FEED_COPY[feed]?.[0] || FEED_COPY.all[0]
@@ -371,7 +388,7 @@ function Settings() {
   }
   return <section className="aihot-settings"><div className="aihot-settings-grid">
     <div>
-      <div className="aihot-settings-card"><h2>分组管理</h2><p className="aihot-hint">创建常用分组，并为每个分组选择信源。分组名最多 5 个字。</p>{!canEdit && <div className="aihot-login-tip"><span>登录后才能管理分组和同步信源设置。</span><button onClick={login}>登录 / 注册</button></div>}<div className="aihot-group-list">{groups.map(g => <div key={g.id} className={$("aihot-group-row", active?.id === g.id && "active")}><button className="aihot-group-name" onClick={() => setActiveId(g.id)}>{g.name}</button><span className="aihot-count">{g.sources.length} 个源</span><button className="aihot-delete" disabled={!canEdit} aria-label={`删除${g.name}`} onClick={() => deleteGroup(g.id)}>×</button></div>)}</div><div className="aihot-add"><input className="aihot-input" maxLength={5} disabled={!canEdit} value={name} onChange={e => setName(e.target.value)} placeholder={canEdit ? "新分组" : "请先登录"} /><button className="aihot-primary" disabled={!canEdit} onClick={addGroup}>添加</button></div></div>
+      <div className="aihot-settings-card"><h2>分组管理</h2><p className="aihot-hint">创建常用分组，并为每个分组选择信源。分组名最多 8 个字。</p>{!canEdit && <div className="aihot-login-tip"><span>登录后才能管理分组和同步信源设置。</span><button onClick={login}>登录 / 注册</button></div>}<div className="aihot-group-list">{groups.map(g => <div key={g.id} className={$("aihot-group-row", active?.id === g.id && "active")}><button className="aihot-group-name" onClick={() => setActiveId(g.id)}>{g.name}</button><span className="aihot-count">{g.sources.length} 个源</span><button className="aihot-delete" disabled={!canEdit} aria-label={`删除${g.name}`} onClick={() => deleteGroup(g.id)}>×</button></div>)}</div><div className="aihot-add"><input className="aihot-input" maxLength={8} disabled={!canEdit} value={name} onChange={e => setName(e.target.value)} placeholder={canEdit ? "新分组" : "请先登录"} /><button className="aihot-primary" disabled={!canEdit} onClick={addGroup}>添加</button></div></div>
       <div className="aihot-settings-card mt-4"><h2>关于 NewsNow</h2><p className="aihot-hint">NewsNow 提供多源资讯聚合、热搜排行与个性化分组。登录后，你的分组和信源配置会自动同步。</p></div>
     </div>
     <div className="aihot-settings-card"><h2>{active?.name ?? "分组"} · 信源</h2><p className="aihot-hint">{canEdit ? "选择这个分组中要展示的信源。" : "未登录时只能查看默认分组，登录后才可以修改。"}</p><div className="aihot-source-toolbar"><input className="aihot-input" value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="搜索信源" /><button className={$("aihot-filter", selectedOnly && "active")} onClick={() => setSelectedOnly(!selectedOnly)}>只看已选</button></div><div className="aihot-selected-strip">{active?.sources.map((id: SourceID) => <span className="aihot-tag" key={id}>{(catalog.find(s => s.id === id) ?? fallbackSource(id)).name}</span>)}</div><div className="aihot-source-grid">{filtered.map(s => <button key={s.id} disabled={!canEdit} className={$("aihot-source-check", active?.sources.includes(s.id) && "selected")} onClick={() => toggleSource(s.id)}><span className="aihot-check">{active?.sources.includes(s.id) ? "✓" : ""}</span><span>{s.name}{s.title ? ` · ${s.title}` : ""}</span></button>)}</div></div>

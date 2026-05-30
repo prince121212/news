@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router"
+import type { CustomGroup, SourceCatalog, SourceID } from "@shared/types"
 import "~/components/aihot/style.css"
 
 type AdminData = {
@@ -17,6 +18,7 @@ const TableLabels: Record<string, string> = {
   feed_source: "信息流信源",
   hot_source: "热搜信源",
   news_item: "信息流内容",
+  default_group: "默认分组",
   _cf_KV: "系统数据",
 }
 
@@ -63,6 +65,7 @@ const ColumnLabels: Record<string, Record<string, string>> = {
   feed_source: { id: "ID", name: "名称", title: "副标题", column_id: "分类", home: "主页", icon: "图标", redirect: "跳转", enabled: "启用", updated: "更新时间" },
   hot_source: { id: "ID", name: "名称", title: "副标题", column_id: "分类", home: "主页", icon: "图标", redirect: "跳转", enabled: "启用", updated: "更新时间" },
   news_item: { id: "ID", source_id: "信源", source_name: "信源名称", source_avatar_url: "信源头像", collector_source_id: "获取源", tag: "标签", tags: "标签组", original_id: "原始ID", title: "标题", url: "链接", mobile_url: "移动端链接", summary: "摘要", content: "正文", cover_url: "封面", video_url: "视频", pub_date: "发布时间", fetched_at: "抓取时间", updated_at: "更新时间", raw_extra: "扩展数据" },
+  default_group: { id: "ID", name: "分组名", sources: "默认信源", sort_order: "排序", enabled: "启用", updated: "更新时间" },
 }
 
 export const Route = createFileRoute("/admin")({ component: AdminComponent })
@@ -158,6 +161,7 @@ function AdminComponent() {
               {data.tableNames.map(table => <button key={table} className={$(activeTable === table && "active")} disabled={loading} onClick={() => switchTable(table)}>{TableLabels[table] ?? table}</button>)}
             </div>
             {error && <div className="aihot-error">{error}</div>}
+            <AdminDefaultGroups username={username} password={password} />
             <section className="aihot-admin-card">
               <div className="aihot-admin-card-head">
                 <h2>{TableLabels[data.table ?? ""] ?? data.table}</h2>
@@ -189,6 +193,144 @@ function AdminComponent() {
         )}
       </main>
     </div>
+  )
+}
+
+
+function AdminDefaultGroups({ username, password }: { username: string, password: string }) {
+  const [groups, setGroups] = useState<CustomGroup[]>([])
+  const [catalog, setCatalog] = useState<SourceCatalog[]>([])
+  const [activeId, setActiveId] = useState("")
+  const [newName, setNewName] = useState("")
+  const [keyword, setKeyword] = useState("")
+  const [selectedOnly, setSelectedOnly] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState("")
+  const active = groups.find(group => group.id === activeId) ?? groups[0]
+
+  const loadGroups = useCallback(async () => {
+    setLoading(true)
+    setMessage("")
+    try {
+      const [groupRes, catalogRes] = await Promise.all([
+        myFetch<{ groups: CustomGroup[] }>("/admin/default-groups", { method: "POST", body: { username, password } }),
+        myFetch<SourceCatalog[]>("/sources/catalog"),
+      ])
+      setGroups(groupRes.groups ?? [])
+      setCatalog(catalogRes ?? [])
+      setActiveId(groupRes.groups?.[0]?.id ?? "")
+    } catch (e: any) {
+      setMessage(e?.data?.message || e?.message || "默认分组读取失败")
+    } finally {
+      setLoading(false)
+    }
+  }, [password, username])
+
+  useEffect(() => { loadGroups() }, [loadGroups])
+
+  const saveGroups = async () => {
+    setLoading(true)
+    setMessage("")
+    try {
+      const res = await myFetch<{ groups: CustomGroup[] }>("/admin/default-groups", { method: "POST", body: { username, password, groups } })
+      setGroups(res.groups ?? [])
+      setActiveId(id => (res.groups ?? []).some(group => group.id === id) ? id : (res.groups?.[0]?.id ?? ""))
+      setMessage("默认分组已保存，新用户和未初始化用户会使用这套配置。")
+    } catch (e: any) {
+      setMessage(e?.data?.message || e?.message || "默认分组保存失败")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const addGroup = () => {
+    const name = newName.trim().slice(0, 8)
+    if (!name) return
+    const group = { id: `group-${Date.now().toString(36)}`, name, sources: [] as SourceID[] }
+    setGroups([...groups, group])
+    setActiveId(group.id)
+    setNewName("")
+  }
+
+  const updateActive = (patch: Partial<CustomGroup>) => {
+    if (!active) return
+    setGroups(groups.map(group => group.id === active.id ? { ...group, ...patch } : group))
+  }
+
+  const deleteGroup = (id: string) => {
+    const group = groups.find(item => item.id === id)
+    if (!group || !confirm(`确认删除默认分组「${group.name}」？`)) return
+    const next = groups.filter(item => item.id !== id)
+    setGroups(next)
+    setActiveId(next[0]?.id ?? "")
+  }
+
+  const moveGroup = (id: string, offset: number) => {
+    const index = groups.findIndex(group => group.id === id)
+    const target = index + offset
+    if (index < 0 || target < 0 || target >= groups.length) return
+    const next = [...groups]
+    const [item] = next.splice(index, 1)
+    next.splice(target, 0, item)
+    setGroups(next)
+  }
+
+  const sourceList = catalog.filter(source => !source.redirect && source.type !== "hottest")
+  const filteredSources = sourceList.filter(source => {
+    const text = `${source.id}${source.name}${source.title ?? ""}`.toLowerCase()
+    const matched = !keyword || text.includes(keyword.toLowerCase())
+    const selected = !!active?.sources.includes(source.id)
+    return matched && (!selectedOnly || selected)
+  })
+
+  const toggleSource = (id: SourceID) => {
+    if (!active) return
+    updateActive({
+      sources: active.sources.includes(id) ? active.sources.filter(source => source !== id) : [...active.sources, id],
+    })
+  }
+
+  return (
+    <section className="aihot-admin-card aihot-admin-default-groups">
+      <div className="aihot-admin-card-head">
+        <div>
+          <h2>默认分组配置</h2>
+          <span>修改默认分组名称、顺序和每组默认信源。保存后影响新用户/未初始化用户。</span>
+        </div>
+        <div className="aihot-admin-actions">
+          <button className="aihot-admin-link" disabled={loading} onClick={loadGroups}>重载</button>
+          <button className="aihot-admin-save" disabled={loading} onClick={saveGroups}>{loading ? "处理中" : "保存默认分组"}</button>
+        </div>
+      </div>
+      {message && <div className="aihot-admin-message">{message}</div>}
+      <div className="aihot-admin-default-grid">
+        <div className="aihot-admin-default-side">
+          <div className="aihot-group-list">
+            {groups.map((group, index) => <div key={group.id} className={$("aihot-group-row", active?.id === group.id && "active")}>
+              <button className="aihot-group-name" onClick={() => setActiveId(group.id)}>{group.name}</button>
+              <span className="aihot-count">{group.sources.length} 源</span>
+              <button className="aihot-mini" disabled={index === 0} onClick={() => moveGroup(group.id, -1)}>↑</button>
+              <button className="aihot-mini" disabled={index === groups.length - 1} onClick={() => moveGroup(group.id, 1)}>↓</button>
+              <button className="aihot-delete" aria-label={`删除${group.name}`} onClick={() => deleteGroup(group.id)}>×</button>
+            </div>)}
+          </div>
+          <div className="aihot-add">
+            <input className="aihot-input" maxLength={8} value={newName} onChange={e => setNewName(e.target.value)} placeholder="新默认分组" />
+            <button className="aihot-primary" onClick={addGroup}>添加</button>
+          </div>
+        </div>
+        <div className="aihot-admin-default-editor">
+          {active
+            ? <>
+                <label className="aihot-field compact"><span>分组名</span><input maxLength={8} value={active.name} onChange={e => updateActive({ name: e.target.value.slice(0, 8) })} /></label>
+                <div className="aihot-source-toolbar"><input className="aihot-input" value={keyword} onChange={e => setKeyword(e.target.value)} placeholder="搜索信源" /><button className={$("aihot-filter", selectedOnly && "active")} onClick={() => setSelectedOnly(!selectedOnly)}>只看已选</button></div>
+                <div className="aihot-selected-strip">{active.sources.map(id => <span className="aihot-tag" key={id}>{catalog.find(source => source.id === id)?.name ?? id}</span>)}</div>
+                <div className="aihot-source-grid admin">{filteredSources.map(source => <button key={source.id} className={$("aihot-source-check", active.sources.includes(source.id) && "selected")} onClick={() => toggleSource(source.id)}><span className="aihot-check">{active.sources.includes(source.id) ? "✓" : ""}</span><span>{source.name}{source.title ? ` · ${source.title}` : ""}</span></button>)}</div>
+              </>
+            : <div className="aihot-admin-empty">暂无默认分组，请先添加。</div>}
+        </div>
+      </div>
+    </section>
   )
 }
 
