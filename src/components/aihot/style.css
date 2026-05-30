@@ -47,8 +47,18 @@ html:not(.dark) .aihot-sidebar { background: rgba(248, 250, 252, .78); }
 .aihot-mobile-header { display: none; }
 .aihot-hero { position: sticky; top: 24px; z-index: 8; max-width: 1180px; margin: 0 auto 22px; padding: 20px; border: 1px solid var(--ai-border); border-radius: 18px; background: var(--ai-panel); backdrop-filter: blur(20px); }
 .aihot-hero-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.aihot-hero-head { flex: 1; min-width: 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .aihot-hero h1 { margin: 0; font-size: 28px; }
 .aihot-subtitle { margin: 6px 0 0; color: var(--ai-muted); font-size: 14px; }
+.aihot-hero-refresh { flex-shrink: 0; width: 46px; height: 46px; display: grid; place-items: center; font-size: 20px; color: var(--ai-cyan); border: 2px solid rgba(34,211,238,.5); border-radius: 999px; background: rgba(34,211,238,.08); transition: color .2s, border-color .2s, background .2s, transform .2s; }
+.aihot-hero-refresh:hover:not(:disabled) { background: rgba(34,211,238,.16); border-color: var(--ai-cyan); transform: rotate(90deg); }
+.aihot-hero-refresh:disabled { cursor: default; }
+.aihot-hero-refresh.loading { transform: none; }
+.aihot-hero-refresh.loading span { animation: aihot-spin .8s linear infinite; }
+@keyframes aihot-spin { to { transform: rotate(360deg); } }
+.aihot-hero-refresh.has-update { color: #fb923c; border-color: rgba(251,146,60,.6); background: rgba(251,146,60,.12); animation: aihot-pulse 1.6s ease-in-out infinite; }
+.aihot-hero-refresh.has-update:hover:not(:disabled) { border-color: #fb923c; background: rgba(251,146,60,.2); }
+@keyframes aihot-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(251,146,60,.4); } 50% { box-shadow: 0 0 0 6px rgba(251,146,60,0); } }
 .aihot-search { width: 260px; height: 38px; display: flex; align-items: center; padding: 0 14px; color: var(--ai-muted); border: 1px solid var(--ai-border); border-radius: 12px; background: rgba(15, 23, 42, .35); }
 html:not(.dark) .aihot-search { background: rgba(255,255,255,.72); }
 
@@ -136,6 +146,7 @@ html:not(.dark) .aihot-source-check { background: rgba(255,255,255,.5); }
   .aihot-hero { top: 58px; padding: 14px; margin-bottom: 14px; border-radius: 16px; }
   .aihot-hero-row { display: block; }
   .aihot-hero h1 { font-size: 24px; }
+  .aihot-hero-refresh { width: 40px; height: 40px; font-size: 18px; }
   .aihot-search { width: 100%; margin-top: 10px; }
   .aihot-hot-wrap .aihot-search, .aihot-hero.hot .aihot-search { display: none; }
   .aihot-timeline-item { grid-template-columns: 18px 1fr; gap: 10px; }

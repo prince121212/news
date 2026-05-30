@@ -25,6 +25,8 @@ export default defineEventHandler(async (event) => {
       keyword: body.keyword,
     })
 
+    // 首屏(无 cursor)总是触发后台抓取；refresh 时强制抓取当前分组所有信源。
+    // 抓取不阻塞响应，新内容由前端稍后静默重查取回。
     if (!body.cursor) {
       scheduleNewsRefresh(event, refreshNewsSources({
         db,

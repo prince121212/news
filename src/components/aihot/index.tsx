@@ -130,6 +130,8 @@ export function AiHotApp() {
   const [feed, setFeed] = useState<Feed>("all")
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [timelineKeyword, setTimelineKeyword] = useState("")
+  const [refreshSignal, setRefreshSignal] = useState(0)
+  const [refreshState, setRefreshState] = useState<"idle" | "refreshing" | "has-update">("idle")
   const [primitiveMetadata, setPrimitiveMetadata] = useAtom(primitiveMetadataAtom)
   const groups = primitiveMetadata.customGroups
   const defaultGroups = useQuery({
@@ -152,6 +154,17 @@ export function AiHotApp() {
   const title = feed === "settings" ? FEED_COPY.settings[0] : activeGroup?.name || FEED_COPY[feed]?.[0] || FEED_COPY.all[0]
   const subtitle = feed === "settings" ? FEED_COPY.settings[1] : activeGroup ? `${activeGroup.name}分组的最新内容` : FEED_COPY[feed]?.[1] || FEED_COPY.all[1]
   const showTimelineSearch = feed !== "hottest" && feed !== "settings"
+  const timelineSources = activeGroup ? activeGroup.sources : feed === "all" ? allDynamicSources(groups) : []
+  const canRefresh = showTimelineSearch && timelineSources.length > 0
+  const triggerRefresh = () => {
+    if (refreshState === "refreshing" || !canRefresh) return
+    setRefreshState("refreshing")
+    setRefreshSignal(signal => signal + 1)
+  }
+  const timelineKey = `${feed}|${timelineSources.join(",")}|${timelineKeyword}`
+  useEffect(() => {
+    setRefreshState("idle")
+  }, [timelineKey])
 
   return (
     <div className="aihot-app">
@@ -181,11 +194,24 @@ export function AiHotApp() {
         <main className="aihot-main">
           <section className={$("aihot-hero", feed === "hottest" && "hot")}>
             <div className="aihot-hero-row">
-              <div><h1>{title}</h1><p className="aihot-subtitle">{subtitle}</p></div>
+              <div className="aihot-hero-head">
+                <div><h1>{title}</h1><p className="aihot-subtitle">{subtitle}</p></div>
+                {canRefresh && (
+                  <button
+                    className={$("aihot-hero-refresh", refreshState === "refreshing" && "loading", refreshState === "has-update" && "has-update")}
+                    onClick={triggerRefresh}
+                    disabled={refreshState === "refreshing"}
+                    aria-label={refreshState === "has-update" ? "有最新内容，点击刷新" : "刷新当前分组"}
+                    title={refreshState === "has-update" ? "有最新内容，点击查看" : "抓取当前分组所有信源"}
+                  >
+                    <span className="i-ph:arrows-clockwise-bold" />
+                  </button>
+                )}
+              </div>
               {showTimelineSearch && <input className="aihot-search" value={timelineKeyword} onChange={e => setTimelineKeyword(e.target.value)} placeholder="搜索标题、摘要或来源" />}
             </div>
           </section>
-          {feed === "settings" ? <Settings /> : feed === "hottest" ? <Hottest /> : <Timeline sources={activeGroup ? activeGroup.sources : allDynamicSources(groups)} keyword={timelineKeyword} />}
+          {feed === "settings" ? <Settings /> : feed === "hottest" ? <Hottest /> : <Timeline sources={timelineSources} keyword={timelineKeyword} refreshSignal={refreshSignal} onRefreshDone={() => setRefreshState("idle")} onUpdateAvailable={() => setRefreshState("has-update")} />}
         </main>
       </div>
     </div>
@@ -210,8 +236,9 @@ function allDynamicSources(groups: CustomGroup[]) {
   return [...new Set(groups.flatMap(g => g.sources).filter(id => sources[id]?.type !== "hottest"))] as SourceID[]
 }
 
-function Timeline({ sources: ids, keyword }: { sources: SourceID[], keyword: string }) {
+function Timeline({ sources: ids, keyword, refreshSignal, onRefreshDone, onUpdateAvailable }: { sources: SourceID[], keyword: string, refreshSignal: number, onRefreshDone: () => void, onUpdateAvailable: () => void }) {
   const catalogMap = useSourceCatalogMap()
+  const queryClient = useQueryClient()
   const [extraPages, setExtraPages] = useState<NewsPage[]>([])
   const [loadingMore, setLoadingMore] = useState(false)
   const [collapsedDays, setCollapsedDays] = useState<string[]>([])
@@ -228,6 +255,44 @@ function Timeline({ sources: ids, keyword }: { sources: SourceID[], keyword: str
     setExtraPages([])
     setCollapsedDays([])
   }, [sourceKey, keyword])
+  useEffect(() => {
+    if (!refreshSignal || !ids.length) return
+    let cancelled = false
+    const timers: ReturnType<typeof setTimeout>[] = []
+    // 后台抓取写库需要时间：先后在 10s、20s 各静默重查一次（不动列表）。
+    // 任一次检测到「当前未展示」的新条目即提示更新，并停止后续复查。
+    const scheduleSilentCheck = (delay: number, next?: number) => {
+      timers.push(setTimeout(async () => {
+        if (cancelled) return
+        try {
+          const fresh = await fetchNewsPage({ sources: ids, keyword, limit: 30 })
+          if (cancelled) return
+          const shown = queryClient.getQueryData<NewsPage>(["news", sourceKey, keyword])
+          const shownUrls = new Set((shown?.items ?? []).map(item => item.url))
+          if (fresh.items.some(item => !shownUrls.has(item.url))) onUpdateAvailable()
+          else if (next) scheduleSilentCheck(next)
+        } catch {}
+      }, delay))
+    }
+    ;(async () => {
+      try {
+        // 乐观返回：立即取回当前数据库最新数据并展示，同时后端会后台 force 抓取所有信源。
+        const page = await fetchNewsPage({ sources: ids, keyword, limit: 30, refresh: true })
+        if (cancelled) return
+        setExtraPages([])
+        setCollapsedDays([])
+        queryClient.setQueryData(["news", sourceKey, keyword], page)
+      } finally {
+        if (!cancelled) onRefreshDone()
+      }
+      scheduleSilentCheck(10000, 10000)
+    })()
+    return () => {
+      cancelled = true
+      timers.forEach(clearTimeout)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshSignal])
   const pages = [firstPage.data, ...extraPages].filter(Boolean) as NewsPage[]
   const items = pages.flatMap(page => page.items)
   const nextCursor = pages.at(-1)?.nextCursor
