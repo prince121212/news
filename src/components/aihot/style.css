@@ -164,8 +164,8 @@ html:not(.dark) .aihot-source-check { background: rgba(255,255,255,.5); }
   .aihot-filter { width: 100%; }
   .aihot-drawer-backdrop { position: fixed; inset: 0; z-index: 80; display: block; opacity: 0; pointer-events: none; background: rgba(2,6,23,.5); transition: opacity .2s; }
   .aihot-drawer-backdrop.open { opacity: 1; pointer-events: auto; backdrop-filter: blur(3px); }
-  .aihot-drawer { position: fixed; top: 0; right: 0; z-index: 90; display: flex; flex-direction: column; width: 210px; max-width: 68vw; height: 100vh; padding: 16px 10px; background: var(--ai-panel-strong); border-left: 1px solid var(--ai-border); box-shadow: -24px 0 80px rgba(0,0,0,.35); backdrop-filter: blur(18px); transform: translateX(105%); transition: transform .24s ease; }
-  .aihot-drawer.open { transform: translateX(0); }
+  .aihot-drawer { position: fixed; top: 0; right: 0; z-index: 90; display: flex; flex-direction: column; width: 210px; max-width: 68vw; height: 100vh; padding: 16px 10px; background: var(--ai-panel-strong); border-left: 1px solid var(--ai-border); backdrop-filter: blur(18px); transform: translateX(105%); transition: transform .24s ease; }
+  .aihot-drawer.open { transform: translateX(0); box-shadow: -24px 0 80px rgba(0,0,0,.35); }
   .aihot-drawer-head { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; height: 56px; margin-bottom: 8px; }
   .aihot-drawer-logo { font-size: 18px; font-weight: 900; }
   .aihot-drawer-logo b { color: var(--ai-cyan); }
@@ -238,7 +238,7 @@ html:not(.dark) .aihot-source-check { background: rgba(255,255,255,.5); }
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(100% + 6px);
+  bottom: calc(100% + 6px);
   z-index: 30;
   height: 34px;
   display: none;
