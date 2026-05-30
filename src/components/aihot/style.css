@@ -354,3 +354,8 @@ html:not(.dark) .aihot-admin-page-jump input { background: rgba(255,255,255,.76)
 @media (max-width: 860px) {
   .aihot-admin-default-grid { grid-template-columns: 1fr; }
 }
+.aihot-admin-rss-add { display: grid; grid-template-columns: minmax(260px, 1.6fr) minmax(160px, .8fr) 120px auto; gap: 10px; margin-bottom: 14px; align-items: center; }
+.aihot-admin-rss-add select.aihot-input { height: 42px; }
+@media (max-width: 900px) {
+  .aihot-admin-rss-add { grid-template-columns: 1fr; }
+}

@@ -206,6 +206,9 @@ function AdminDefaultGroups({ username, password }: { username: string, password
   const [selectedOnly, setSelectedOnly] = useState(false)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
+  const [rssUrl, setRssUrl] = useState("")
+  const [rssColumn, setRssColumn] = useState("china")
+  const [rssName, setRssName] = useState("")
   const active = groups.find(group => group.id === activeId) ?? groups[0]
 
   const loadGroups = useCallback(async () => {
@@ -227,6 +230,24 @@ function AdminDefaultGroups({ username, password }: { username: string, password
   }, [password, username])
 
   useEffect(() => { loadGroups() }, [loadGroups])
+
+  const addRssSource = async () => {
+    if (!rssUrl.trim()) return
+    setLoading(true)
+    setMessage("")
+    try {
+      const res = await myFetch<{ source: SourceCatalog }>("/admin/rss-sources", { method: "POST", body: { username, password, url: rssUrl, column: rssColumn, name: rssName || undefined } })
+      setMessage(`RSS 信源已添加：${res.source?.name ?? rssUrl}`)
+      setRssUrl("")
+      setRssName("")
+      const catalogRes = await myFetch<SourceCatalog[]>("/sources/catalog")
+      setCatalog(catalogRes ?? [])
+    } catch (e: any) {
+      setMessage(e?.data?.message || e?.message || "RSS 信源添加失败")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const saveGroups = async () => {
     setLoading(true)
@@ -303,6 +324,17 @@ function AdminDefaultGroups({ username, password }: { username: string, password
         </div>
       </div>
       {message && <div className="aihot-admin-message">{message}</div>}
+      <div className="aihot-admin-rss-add">
+        <input className="aihot-input" value={rssUrl} onChange={e => setRssUrl(e.target.value)} placeholder="标准 RSS 地址或 rsshub://..." />
+        <input className="aihot-input" value={rssName} onChange={e => setRssName(e.target.value)} placeholder="信源名（可选）" />
+        <select className="aihot-input" value={rssColumn} onChange={e => setRssColumn(e.target.value)}>
+          <option value="china">国内</option>
+          <option value="world">国际</option>
+          <option value="tech">科技</option>
+          <option value="finance">财经</option>
+        </select>
+        <button className="aihot-admin-save" disabled={loading || !rssUrl.trim()} onClick={addRssSource}>校验并添加 RSS 信源</button>
+      </div>
       <div className="aihot-admin-default-grid">
         <div className="aihot-admin-default-side">
           <div className="aihot-group-list">

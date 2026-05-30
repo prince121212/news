@@ -3,6 +3,7 @@ import { sources } from "@shared/sources"
 import { typeSafeObjectEntries } from "@shared/type.util"
 import type { SourceCatalog } from "@shared/types"
 import type { AppDatabase } from "#/utils/database"
+import { RssSourceTable } from "#/database/rss-source"
 
 type SourceKind = "feed" | "hot"
 
@@ -46,6 +47,7 @@ export class SourceCatalogTable {
     `).run()
     // 开发阶段直接切到两张信源表；旧聚合表不再使用。
     await this.db.prepare(`DROP TABLE IF EXISTS source_catalog`).run()
+    await new RssSourceTable(this.db).init()
     logger.success("init source tables")
   }
 
@@ -121,7 +123,7 @@ export class SourceCatalogTable {
       ORDER BY name COLLATE NOCASE ASC, id ASC
     `).all()) as any[]
 
-    return rows.map(row => ({
+    const staticCatalog = rows.map(row => ({
       id: row.id,
       name: row.name,
       title: row.title || undefined,
@@ -134,5 +136,6 @@ export class SourceCatalogTable {
       enabled: Boolean(row.enabled),
       updated: row.updated,
     }))
+    return [...staticCatalog, ...await new RssSourceTable(this.db).getCatalog()]
   }
 }

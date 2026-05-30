@@ -1,5 +1,7 @@
 import type { CustomGroup } from "@shared/types"
-import { createDefaultCustomGroups, sanitizeDefaultGroups } from "@shared/default-groups"
+import { createDefaultCustomGroups } from "@shared/default-groups"
+import sources from "@shared/sources"
+import { RssSourceTable } from "#/database/rss-source"
 import type { AppDatabase } from "#/utils/database"
 
 function normalizeRows(res: any) {
@@ -33,6 +35,23 @@ export class DefaultGroupTable {
     await this.setGroups(createDefaultCustomGroups())
   }
 
+  private async validSourceIds() {
+    const rssIds = (await new RssSourceTable(this.db).getAll({ enabledOnly: true })).map(row => row.id)
+    return new Set([...Object.keys(sources), ...rssIds])
+  }
+
+  private async sanitizeGroups(groups: CustomGroup[] = []) {
+    const valid = await this.validSourceIds()
+    return groups.map((group, index) => ({
+      id: String(group.id || `group-${index + 1}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40) || `group-${index + 1}`,
+      name: String(group.name || "分组").trim().slice(0, 8),
+      sources: [...new Set((group.sources ?? [])
+        .filter(Boolean)
+        .map(id => sources[id]?.redirect ?? id)
+        .filter(id => valid.has(id) && sources[id]?.type !== "hottest"))] as any,
+    })).filter(group => group.name)
+  }
+
   async getGroups(): Promise<CustomGroup[]> {
     const rows = normalizeRows(await this.db.prepare(`
       SELECT id, name, sources
@@ -42,7 +61,7 @@ export class DefaultGroupTable {
     `).all()) as { id: string, name: string, sources: string }[]
 
     if (!rows.length) return createDefaultCustomGroups()
-    return sanitizeDefaultGroups(rows.map(row => ({
+    return await this.sanitizeGroups(rows.map(row => ({
       id: row.id,
       name: row.name,
       sources: JSON.parse(row.sources || "[]"),
@@ -50,7 +69,7 @@ export class DefaultGroupTable {
   }
 
   async setGroups(groups: CustomGroup[]) {
-    const normalized = sanitizeDefaultGroups(groups)
+    const normalized = await this.sanitizeGroups(groups)
     const now = Date.now()
     await this.db.prepare(`DELETE FROM default_group`).run()
     for (const [index, group] of normalized.entries()) {

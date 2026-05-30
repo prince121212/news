@@ -4,9 +4,9 @@ import type { CustomGroup, SourceID } from "./types"
 
 export function normalizeGroupSources(items: SourceID[], options: { includeHottest?: boolean } = {}) {
   return [...new Set(items
-    .filter(k => sources[k])
-    .map(k => sources[k].redirect ?? k)
-    .filter(k => options.includeHottest || sources[k]?.type !== "hottest"))] as SourceID[]
+    .filter(Boolean)
+    .map(k => sources[k]?.redirect ?? k)
+    .filter(k => !sources[k] || options.includeHottest || sources[k]?.type !== "hottest"))] as SourceID[]
 }
 
 export function createDefaultCustomGroups(): CustomGroup[] {
