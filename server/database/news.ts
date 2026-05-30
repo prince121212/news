@@ -137,6 +137,7 @@ export class NewsItemTable {
       SET pub_date = pub_date - ?
       WHERE pub_date IS NOT NULL
         AND fetched_at IS NOT NULL
+        AND source_id = 'jin10'
         AND pub_date > fetched_at + ?
         AND pub_date - ? <= fetched_at + ?
     `).run(East8Offset, FutureTolerance, East8Offset, FutureTolerance)
