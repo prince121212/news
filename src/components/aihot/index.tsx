@@ -250,27 +250,33 @@ export function AiHotApp() {
 function Nav({ feed, setFeed, groups }: { feed: Feed, setFeed: (feed: Feed) => void, groups: CustomGroup[] }) {
   return (
     <nav className="aihot-nav">
-      <button type="button" className={$("aihot-nav-item", feed === "all" && "active")} onClick={() => setFeed("all")}>
-        <span>☷</span>
-        全部动态
-      </button>
-      <button type="button" className={$("aihot-nav-item", feed === "hottest" && "active")} onClick={() => setFeed("hottest")}>
-        <span>#</span>
-        热搜
-      </button>
-      <div className="aihot-nav-title">分组</div>
-      {groups.map(group => (
-        <button type="button" key={group.id} className={$("aihot-nav-item", feed === `group:${group.id}` && "active")} onClick={() => setFeed(`group:${group.id}`)}>
-          <span>⌘</span>
-          {group.name}
+      <div className="aihot-nav-fixed">
+        <button type="button" className={$("aihot-nav-item", feed === "all" && "active")} onClick={() => setFeed("all")}>
+          <span>☷</span>
+          全部动态
         </button>
-      ))}
-      <div className="aihot-nav-title">管理</div>
-      <button type="button" className={$("aihot-nav-item", feed === "settings" && "active")} onClick={() => setFeed("settings")}>
-        <span>⚙</span>
-        设置
-      </button>
-      <AccountAction compact />
+        <button type="button" className={$("aihot-nav-item", feed === "hottest" && "active")} onClick={() => setFeed("hottest")}>
+          <span>#</span>
+          热搜
+        </button>
+        <div className="aihot-nav-title">分组</div>
+      </div>
+      <div className="aihot-nav-groups">
+        {groups.map(group => (
+          <button type="button" key={group.id} className={$("aihot-nav-item", feed === `group:${group.id}` && "active")} onClick={() => setFeed(`group:${group.id}`)}>
+            <span>⌘</span>
+            {group.name}
+          </button>
+        ))}
+      </div>
+      <div className="aihot-nav-fixed">
+        <div className="aihot-nav-title">管理</div>
+        <button type="button" className={$("aihot-nav-item", feed === "settings" && "active")} onClick={() => setFeed("settings")}>
+          <span>⚙</span>
+          设置
+        </button>
+        <AccountAction compact />
+      </div>
     </nav>
   )
 }
