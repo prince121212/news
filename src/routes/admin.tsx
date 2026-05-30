@@ -23,6 +23,7 @@ const TableLabels: Record<string, string> = {
 const HiddenColumns = new Set(["password"])
 
 const DefaultColumnWidth = 160
+const MinAdminTableWidth = 1600
 
 const ColumnWidths: Record<string, number> = {
   id: 140,
@@ -124,7 +125,7 @@ function AdminComponent() {
             <p>数据库与系统数据查看</p>
           </div>
           <div className="aihot-admin-actions">
-            <span className="aihot-admin-version">V0.0.1</span>
+            <span className="aihot-admin-version">V0.0.2</span>
             <Link to="/" className="aihot-admin-link">返回首页</Link>
             {data && (
               <button
@@ -193,7 +194,10 @@ function AdminComponent() {
 
 function AdminTableView({ tableName, rows }: { tableName: string, rows: Record<string, unknown>[] }) {
   const columns = useMemo(() => Array.from(new Set(rows.flatMap(row => Object.keys(row)))).filter(column => !HiddenColumns.has(column)), [rows])
-  const tableWidth = useMemo(() => columns.reduce((sum, column) => sum + (ColumnWidths[column] ?? DefaultColumnWidth), 0), [columns])
+  const tableWidth = useMemo(() => Math.max(
+    MinAdminTableWidth,
+    columns.reduce((sum, column) => sum + (ColumnWidths[column] ?? DefaultColumnWidth), 0),
+  ), [columns])
   if (!rows.length) return <div className="aihot-admin-empty">暂无数据</div>
   return (
     <div className="aihot-admin-table-wrap">
@@ -229,8 +233,8 @@ function AdminCell({ column, value }: { column: string, value: unknown }) {
 function previewCell(text: string) {
   const compact = text.replace(/\s+/g, " ").trim()
   if (!compact) return ""
-  if (compact.length <= 8) return compact
-  return `${compact.slice(0, 5)}...`
+  if (compact.length <= 20) return compact
+  return `${compact.slice(0, 20)}...`
 }
 
 function formatCell(column: string, value: unknown) {
