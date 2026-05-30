@@ -425,6 +425,24 @@
     "color": "gray",
     "interval": 1800000
   },
+  "ximalaya-kuayangreyi": {
+    "title": "跨洋热议",
+    "name": "喜马拉雅",
+    "type": "realtime",
+    "column": "china",
+    "home": "https://www.ximalaya.com/album/82179651",
+    "color": "orange",
+    "interval": 1800000
+  },
+  "xiaoyuzhou-sulachigua": {
+    "title": "俗辣吃瓜",
+    "name": "小宇宙",
+    "type": "realtime",
+    "column": "china",
+    "home": "https://www.xiaoyuzhoufm.com/podcast/63bee70c30ff2a00103a63b5",
+    "color": "purple",
+    "interval": 1800000
+  },
   "jin10": {
     "name": "金十数据",
     "type": "realtime",
