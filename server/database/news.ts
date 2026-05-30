@@ -29,6 +29,9 @@ function normalizeRows(res: any) {
   return res?.results ?? res?.rows ?? res ?? []
 }
 
+const East8Offset = 8 * 60 * 60 * 1000
+const FutureTolerance = 5 * 60 * 1000
+
 function toTime(value: unknown) {
   if (!value) return 0
   if (typeof value === "number") return Number.isFinite(value) ? value : 0
@@ -123,9 +126,21 @@ export class NewsItemTable {
     await this.db.prepare(`CREATE INDEX IF NOT EXISTS idx_news_item_source_time ON news_item(source_id, pub_date DESC, fetched_at DESC);`).run()
     await this.db.prepare(`CREATE INDEX IF NOT EXISTS idx_news_item_time ON news_item(pub_date DESC, fetched_at DESC);`).run()
     await this.ensureUniqueUrlIndex()
+    await this.fixShiftedFuturePubDates()
     logger.success("init news item table")
   }
 
+
+  private async fixShiftedFuturePubDates() {
+    await this.db.prepare(`
+      UPDATE news_item
+      SET pub_date = pub_date - ?
+      WHERE pub_date IS NOT NULL
+        AND fetched_at IS NOT NULL
+        AND pub_date > fetched_at + ?
+        AND pub_date - ? <= fetched_at + ?
+    `).run(East8Offset, FutureTolerance, East8Offset, FutureTolerance)
+  }
 
   private async ensureUniqueUrlIndex() {
     const duplicateRows = normalizeRows(await this.db.prepare(`
