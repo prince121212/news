@@ -258,8 +258,7 @@ html:not(.dark) .aihot-source-check { background: rgba(255,255,255,.5); }
   font-size: 13px;
   font-weight: 800;
 }
-.aihot-account-wrap.open .aihot-logout-btn,
-.aihot-account-wrap:hover .aihot-logout-btn { display: flex; }
+.aihot-account-wrap.open .aihot-logout-btn { display: flex; }
 .aihot-sidebar-bottom .aihot-account.compact { display: none; }
 .aihot-nav .aihot-account.compact { display: none; }
 .aihot-sidebar-bottom .aihot-account-wrap.compact { display: none; }

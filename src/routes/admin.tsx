@@ -71,8 +71,12 @@ const ColumnLabels: Record<string, Record<string, string>> = {
 export const Route = createFileRoute("/admin")({ component: AdminComponent })
 
 function AdminComponent() {
-  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [code, setCode] = useState("")
+  const [codeLogin, setCodeLogin] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [countdown, setCountdown] = useState(0)
   const [data, setData] = useState<AdminData>()
   const [activeTable, setActiveTable] = useState("")
   const [page, setPage] = useState(1)
@@ -81,12 +85,12 @@ function AdminComponent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const loadData = useCallback(async (targetTable = activeTable, targetPage = page, e?: React.FormEvent, targetPageSize = pageSize) => {
+  const loadData = useCallback(async (targetTable = activeTable, targetPage = page, e?: React.FormEvent, targetPageSize = pageSize, overridePassword?: string) => {
     e?.preventDefault()
     setError("")
     setLoading(true)
     try {
-      const res = await myFetch("/admin/db", { method: "POST", body: { username, password, table: targetTable || undefined, page: targetPage, pageSize: targetPageSize ?? 50 } }) as AdminData
+      const res = await myFetch("/admin/db", { method: "POST", body: { email, password: overridePassword ?? password, table: targetTable || undefined, page: targetPage, pageSize: targetPageSize ?? 50 } }) as AdminData
       setData(res)
       setActiveTable(res.table ?? "")
       setPage(res.page)
@@ -98,7 +102,46 @@ function AdminComponent() {
     }
     // pageSize 为固定常量，无需纳入依赖。
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTable, page, password, username])
+  }, [activeTable, page, password, email])
+
+  useEffect(() => {
+    if (countdown <= 0) return
+    const timer = setInterval(() => setCountdown(c => c - 1), 1000)
+    return () => clearInterval(timer)
+  }, [countdown])
+
+  const isValidEmail = useCallback((v: string) => /^[^\s@]+@[^\s@.]+\.[^\s@]+$/.test(v.trim()), [])
+
+  const sendCode = useCallback(async () => {
+    setError("")
+    if (!isValidEmail(email)) {
+      setError("请输入正确的邮箱")
+      return
+    }
+    setSending(true)
+    try {
+      await myFetch("/send-code", { method: "POST", body: { email } })
+      setCountdown(60)
+    } catch (e: any) {
+      setError(e?.data?.message || e?.message || "验证码发送失败")
+    } finally {
+      setSending(false)
+    }
+  }, [email, isValidEmail])
+
+  const submitCodeLogin = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setLoading(true)
+    try {
+      const res = await myFetch("/admin/login", { method: "POST", body: { email, code } }) as { password: string }
+      setPassword(res.password)
+      await loadData(activeTable, 1, undefined, pageSize, res.password)
+    } catch (e: any) {
+      setError(e?.data?.message || e?.message || "登录失败")
+      setLoading(false)
+    }
+  }, [email, code, activeTable, pageSize, loadData])
 
   const switchTable = (table: string) => {
     setActiveTable(table)
@@ -148,18 +191,42 @@ function AdminComponent() {
         </section>
 
         {!data && (
-          <form className="aihot-admin-login" onSubmit={e => loadData(activeTable, 1, e)}>
+          <form className="aihot-admin-login" onSubmit={codeLogin ? submitCodeLogin : e => loadData(activeTable, 1, e)}>
             <h2>管理员登录</h2>
             <label className="aihot-field">
-              <span>账号</span>
-              <input value={username} autoFocus onChange={e => setUsername(e.target.value)} />
+              <span>邮箱</span>
+              <input value={email} type="email" autoFocus placeholder="you@example.com" onChange={e => setEmail(e.target.value)} />
             </label>
-            <label className="aihot-field">
-              <span>密码</span>
-              <input value={password} type="password" onChange={e => setPassword(e.target.value)} />
-            </label>
+            {codeLogin
+              ? (
+                  <label className="aihot-field">
+                    <span>验证码</span>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input style={{ flex: 1, minWidth: 0 }} value={code} inputMode="numeric" placeholder="6 位验证码" onChange={e => setCode(e.target.value)} />
+                      <button type="button" disabled={sending || countdown > 0} style={{ flexShrink: 0, height: 42, padding: "0 12px", borderRadius: 13, fontWeight: 800, color: "var(--ai-text)", border: "1px solid var(--ai-border)", background: "rgba(148,163,184,.08)", opacity: sending || countdown > 0 ? 0.55 : 1 }} onClick={sendCode}>
+                        {countdown > 0 ? `${countdown}s` : sending ? "发送中" : "发送验证码"}
+                      </button>
+                    </div>
+                  </label>
+                )
+              : (
+                  <label className="aihot-field">
+                    <span>密码</span>
+                    <input value={password} type="password" onChange={e => setPassword(e.target.value)} />
+                  </label>
+                )}
             {error && <div className="aihot-error">{error}</div>}
             <button type="submit" className="aihot-admin-submit" disabled={loading}>{loading ? "读取中" : "进入管理后台"}</button>
+            <button
+              type="button"
+              style={{ width: "100%", marginTop: 12, color: "var(--ai-muted)", fontSize: 13 }}
+              onClick={() => {
+                setCodeLogin(v => !v)
+                setError("")
+              }}
+            >
+              {codeLogin ? "用密码登录" : "用验证码登录"}
+            </button>
           </form>
         )}
 
@@ -169,7 +236,7 @@ function AdminComponent() {
               {data.tableNames.map(table => <button type="button" key={table} className={$(activeTable === table && "active")} disabled={loading} onClick={() => switchTable(table)}>{TableLabels[table] ?? table}</button>)}
             </div>
             {error && <div className="aihot-error">{error}</div>}
-            <AdminDefaultGroups username={username} password={password} />
+            <AdminDefaultGroups email={email} password={password} />
             <section className="aihot-admin-card">
               <div className="aihot-admin-card-head">
                 <h2>{TableLabels[data.table ?? ""] ?? data.table}</h2>
@@ -215,7 +282,7 @@ function AdminComponent() {
   )
 }
 
-function AdminDefaultGroups({ username, password }: { username: string, password: string }) {
+function AdminDefaultGroups({ email, password }: { email: string, password: string }) {
   const confirm = useConfirm()
   const [groups, setGroups] = useState<CustomGroup[]>([])
   const [catalog, setCatalog] = useState<SourceCatalog[]>([])
@@ -235,7 +302,7 @@ function AdminDefaultGroups({ username, password }: { username: string, password
     setMessage("")
     try {
       const [groupRes, catalogRes] = await Promise.all([
-        myFetch<{ groups: CustomGroup[] }>("/admin/default-groups", { method: "POST", body: { username, password } }),
+        myFetch<{ groups: CustomGroup[] }>("/admin/default-groups", { method: "POST", body: { email, password } }),
         myFetch<SourceCatalog[]>("/sources/catalog"),
       ])
       setGroups(groupRes.groups ?? [])
@@ -246,7 +313,7 @@ function AdminDefaultGroups({ username, password }: { username: string, password
     } finally {
       setLoading(false)
     }
-  }, [password, username])
+  }, [password, email])
 
   useEffect(() => {
     loadGroups()
@@ -257,7 +324,7 @@ function AdminDefaultGroups({ username, password }: { username: string, password
     setLoading(true)
     setMessage("")
     try {
-      const res = await myFetch<{ source: SourceCatalog }>("/admin/rss-sources", { method: "POST", body: { username, password, url: rssUrl, column: rssColumn, name: rssName || undefined } })
+      const res = await myFetch<{ source: SourceCatalog }>("/admin/rss-sources", { method: "POST", body: { email, password, url: rssUrl, column: rssColumn, name: rssName || undefined } })
       setMessage(`RSS 信源已添加：${res.source?.name ?? rssUrl}`)
       setRssUrl("")
       setRssName("")
@@ -274,7 +341,7 @@ function AdminDefaultGroups({ username, password }: { username: string, password
     setLoading(true)
     setMessage("")
     try {
-      const res = await myFetch<{ groups: CustomGroup[] }>("/admin/default-groups", { method: "POST", body: { username, password, groups } })
+      const res = await myFetch<{ groups: CustomGroup[] }>("/admin/default-groups", { method: "POST", body: { email, password, groups } })
       setGroups(res.groups ?? [])
       setActiveId(id => (res.groups ?? []).some(group => group.id === id) ? id : (res.groups?.[0]?.id ?? ""))
       setMessage("默认分组已保存，新用户和未初始化用户会使用这套配置。")

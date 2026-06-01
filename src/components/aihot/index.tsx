@@ -621,15 +621,25 @@ function Settings() {
 function AccountAction({ compact = false }: { compact?: boolean }) {
   const { loggedIn, login, logout, userInfo, enableLogin, loginDialogOpen, setLoginDialogOpen, submitLogin, sendCode } = useLogin()
   const [open, setOpen] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDocClick = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("click", onDocClick)
+    return () => document.removeEventListener("click", onDocClick)
+  }, [open])
+
   if (!enableLogin) return null
   return (
     <>
       {loggedIn
         ? (
             <div
+              ref={wrapRef}
               className={$("aihot-account-wrap", compact && "compact", open && "open")}
-              onMouseEnter={() => setOpen(true)}
-              onMouseLeave={() => setOpen(false)}
             >
               <button
                 type="button"
@@ -747,10 +757,6 @@ function AiHotLoginDialog({ onClose, onSubmit, onSendCode }: {
           </div>
           <button type="button" aria-label="关闭" onClick={onClose}>×</button>
         </div>
-        <div className="aihot-login-actions" style={{ marginBottom: 16 }}>
-          <button type="button" style={mode === "login" ? undefined : { background: "rgba(148,163,184,.08)", color: "var(--ai-text)", border: "1px solid var(--ai-border)" }} onClick={() => switchMode("login")}>登录</button>
-          <button type="button" style={mode === "register" ? { color: "#06202a", background: "linear-gradient(135deg,#22d3ee,#34d399)" } : undefined} onClick={() => switchMode("register")}>注册</button>
-        </div>
         <label className="aihot-field">
           <span>邮箱</span>
           <input value={email} type="email" autoFocus placeholder="you@example.com" onChange={e => setEmail(e.target.value)} />
@@ -773,9 +779,28 @@ function AiHotLoginDialog({ onClose, onSubmit, onSendCode }: {
           </label>
         )}
         {error && <div className="aihot-error">{error}</div>}
-        <button type="submit" disabled={loading} style={{ width: "100%", height: 42, borderRadius: 13, fontWeight: 800, color: "#06202a", background: "linear-gradient(135deg,#22d3ee,#34d399)", opacity: loading ? 0.55 : 1 }}>
-          {loading ? "处理中" : mode === "register" ? "注册" : "登录"}
-        </button>
+        <div className="aihot-login-actions">
+          <button
+            type={mode === "login" ? "submit" : "button"}
+            disabled={loading}
+            style={mode === "login"
+              ? { color: "#06202a", background: "linear-gradient(135deg,#22d3ee,#34d399)" }
+              : { color: "var(--ai-text)", border: "1px solid var(--ai-border)", background: "rgba(148,163,184,.08)" }}
+            onClick={mode === "login" ? undefined : () => switchMode("login")}
+          >
+            {loading && mode === "login" ? "处理中" : "登录"}
+          </button>
+          <button
+            type={mode === "register" ? "submit" : "button"}
+            disabled={loading}
+            style={mode === "register"
+              ? { color: "#06202a", background: "linear-gradient(135deg,#22d3ee,#34d399)" }
+              : { color: "var(--ai-text)", border: "1px solid var(--ai-border)", background: "rgba(148,163,184,.08)" }}
+            onClick={mode === "register" ? undefined : () => switchMode("register")}
+          >
+            {loading && mode === "register" ? "处理中" : "注册"}
+          </button>
+        </div>
         {mode === "login" && (
           <button
             type="button"

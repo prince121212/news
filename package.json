@@ -108,6 +108,9 @@
     "patchedDependencies": {
       "dayjs": "patches/dayjs.patch"
     },
+    "overrides": {
+      "vite-plugin-with-nitro>h3": "npm:h3@1.15.3"
+    },
     "onlyBuiltDependencies": [
       "@napi-rs/pinyin",
       "@parcel/watcher",
