@@ -35,9 +35,10 @@ export function useLogin() {
   }, [setLoginDialogOpen])
 
   const submitLogin = useCallback(async (payload: {
-    username: string
-    password: string
-    action: "login" | "register"
+    email: string
+    password?: string
+    code?: string
+    action: "login" | "register" | "login-code"
   }) => {
     const res = await myFetch("/login", {
       method: "POST",
@@ -53,6 +54,13 @@ export function useLogin() {
     setLoginDialogOpen(false)
   }, [setJwt, setUserInfo, setLoginDialogOpen])
 
+  const sendCode = useCallback(async (email: string) => {
+    await myFetch("/send-code", {
+      method: "POST",
+      body: { email },
+    })
+  }, [])
+
   const logout = useCallback(() => {
     window.localStorage.clear()
     window.location.reload()
@@ -66,6 +74,7 @@ export function useLogin() {
     logout,
     login,
     submitLogin,
+    sendCode,
     loginDialogOpen,
     setLoginDialogOpen,
   }

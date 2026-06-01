@@ -76,14 +76,14 @@ export class UserTable {
 
   async addPasswordUser(username: string, passwordHash: string) {
     const u = await this.getUser(username)
-    if (u) throw new Error("用户名已存在")
+    if (u) throw new Error("该邮箱已注册")
     await this.addUser(username, passwordHash, "password")
   }
 
   async verifyPasswordUser(username: string, passwordHash: string) {
     const u = await this.getUser(username)
     if (!u || u.type !== "password" || u.password !== passwordHash) {
-      throw new Error("用户名或密码错误")
+      throw new Error("邮箱或密码错误")
     }
     return u
   }

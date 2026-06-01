@@ -619,7 +619,7 @@ function Settings() {
 }
 
 function AccountAction({ compact = false }: { compact?: boolean }) {
-  const { loggedIn, login, logout, userInfo, enableLogin, loginDialogOpen, setLoginDialogOpen, submitLogin } = useLogin()
+  const { loggedIn, login, logout, userInfo, enableLogin, loginDialogOpen, setLoginDialogOpen, submitLogin, sendCode } = useLogin()
   const [open, setOpen] = useState(false)
   if (!enableLogin) return null
   return (
@@ -654,31 +654,81 @@ function AccountAction({ compact = false }: { compact?: boolean }) {
               <b>登录 / 注册</b>
             </button>
           )}
-      {loginDialogOpen && createPortal(<AiHotLoginDialog onClose={() => setLoginDialogOpen(false)} onSubmit={submitLogin} />, document.body)}
+      {loginDialogOpen && createPortal(<AiHotLoginDialog onClose={() => setLoginDialogOpen(false)} onSubmit={submitLogin} onSendCode={sendCode} />, document.body)}
     </>
   )
 }
 
-function AiHotLoginDialog({ onClose, onSubmit }: {
+function AiHotLoginDialog({ onClose, onSubmit, onSendCode }: {
   onClose: () => void
-  onSubmit: (payload: { username: string, password: string, action: "login" | "register" }) => Promise<void>
+  onSubmit: (payload: { email: string, password?: string, code?: string, action: "login" | "register" | "login-code" }) => Promise<void>
+  onSendCode: (email: string) => Promise<void>
 }) {
-  const [username, setUsername] = useState("")
+  const [mode, setMode] = useState<"login" | "register">("login")
+  const [codeLogin, setCodeLogin] = useState(false)
+  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [code, setCode] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [countdown, setCountdown] = useState(0)
 
-  const submit = useCallback(async (action: "login" | "register") => {
+  const needCode = mode === "register" || codeLogin
+  const needPassword = mode === "register" || !codeLogin
+
+  useEffect(() => {
+    if (countdown <= 0) return
+    const timer = setInterval(() => setCountdown(c => c - 1), 1000)
+    return () => clearInterval(timer)
+  }, [countdown])
+
+  const isValidEmail = useCallback((v: string) => /^[^\s@]+@[^\s@.]+\.[^\s@]+$/.test(v.trim()), [])
+
+  const handleSendCode = useCallback(async () => {
     setError("")
+    if (!isValidEmail(email)) {
+      setError("请输入正确的邮箱")
+      return
+    }
+    setSending(true)
+    try {
+      await onSendCode(email.trim())
+      setCountdown(60)
+    } catch (e: any) {
+      setError(e?.data?.message || e?.message || "验证码发送失败")
+    } finally {
+      setSending(false)
+    }
+  }, [email, isValidEmail, onSendCode])
+
+  const submit = useCallback(async () => {
+    setError("")
+    if (!isValidEmail(email)) {
+      setError("请输入正确的邮箱")
+      return
+    }
+    const action = mode === "register" ? "register" : codeLogin ? "login-code" : "login"
     setLoading(true)
     try {
-      await onSubmit({ username, password, action })
+      await onSubmit({
+        email: email.trim(),
+        password: needPassword ? password : undefined,
+        code: needCode ? code : undefined,
+        action,
+      })
     } catch (e: any) {
       setError(e?.data?.message || e?.message || "操作失败")
     } finally {
       setLoading(false)
     }
-  }, [onSubmit, password, username])
+  }, [codeLogin, code, email, isValidEmail, mode, needCode, needPassword, onSubmit, password])
+
+  const switchMode = useCallback((next: "login" | "register") => {
+    setMode(next)
+    setCodeLogin(false)
+    setError("")
+  }, [])
 
   return (
     <div className="aihot-modal-backdrop" onClick={onClose}>
@@ -687,29 +737,57 @@ function AiHotLoginDialog({ onClose, onSubmit }: {
         onClick={e => e.stopPropagation()}
         onSubmit={(e) => {
           e.preventDefault()
-          submit("login")
+          submit()
         }}
       >
         <div className="aihot-modal-head">
           <div>
-            <h2>账号登录</h2>
+            <h2>{mode === "register" ? "注册账号" : "账号登录"}</h2>
             <p>登录后同步分组与信源设置</p>
           </div>
           <button type="button" aria-label="关闭" onClick={onClose}>×</button>
         </div>
-        <label className="aihot-field">
-          <span>用户名</span>
-          <input value={username} autoFocus minLength={4} onChange={e => setUsername(e.target.value)} />
-        </label>
-        <label className="aihot-field">
-          <span>密码</span>
-          <input value={password} type="password" onChange={e => setPassword(e.target.value)} />
-        </label>
-        {error && <div className="aihot-error">{error}</div>}
-        <div className="aihot-login-actions">
-          <button type="submit" disabled={loading}>{loading ? "处理中" : "登录"}</button>
-          <button type="button" disabled={loading} onClick={() => submit("register")}>注册</button>
+        <div className="aihot-login-actions" style={{ marginBottom: 16 }}>
+          <button type="button" style={mode === "login" ? undefined : { background: "rgba(148,163,184,.08)", color: "var(--ai-text)", border: "1px solid var(--ai-border)" }} onClick={() => switchMode("login")}>登录</button>
+          <button type="button" style={mode === "register" ? { color: "#06202a", background: "linear-gradient(135deg,#22d3ee,#34d399)" } : undefined} onClick={() => switchMode("register")}>注册</button>
         </div>
+        <label className="aihot-field">
+          <span>邮箱</span>
+          <input value={email} type="email" autoFocus placeholder="you@example.com" onChange={e => setEmail(e.target.value)} />
+        </label>
+        {needCode && (
+          <label className="aihot-field">
+            <span>验证码</span>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input style={{ flex: 1, minWidth: 0 }} value={code} inputMode="numeric" placeholder="6 位验证码" onChange={e => setCode(e.target.value)} />
+              <button type="button" disabled={sending || countdown > 0} style={{ flexShrink: 0, height: 42, padding: "0 12px", borderRadius: 13, fontWeight: 800, color: "var(--ai-text)", border: "1px solid var(--ai-border)", background: "rgba(148,163,184,.08)", opacity: sending || countdown > 0 ? 0.55 : 1 }} onClick={handleSendCode}>
+                {countdown > 0 ? `${countdown}s` : sending ? "发送中" : "发送验证码"}
+              </button>
+            </div>
+          </label>
+        )}
+        {needPassword && (
+          <label className="aihot-field">
+            <span>密码</span>
+            <input value={password} type="password" placeholder={mode === "register" ? "至少 6 位" : undefined} onChange={e => setPassword(e.target.value)} />
+          </label>
+        )}
+        {error && <div className="aihot-error">{error}</div>}
+        <button type="submit" disabled={loading} style={{ width: "100%", height: 42, borderRadius: 13, fontWeight: 800, color: "#06202a", background: "linear-gradient(135deg,#22d3ee,#34d399)", opacity: loading ? 0.55 : 1 }}>
+          {loading ? "处理中" : mode === "register" ? "注册" : "登录"}
+        </button>
+        {mode === "login" && (
+          <button
+            type="button"
+            style={{ width: "100%", marginTop: 12, color: "var(--ai-muted)", fontSize: 13 }}
+            onClick={() => {
+              setCodeLogin(v => !v)
+              setError("")
+            }}
+          >
+            {codeLogin ? "用密码登录" : "忘记密码？用验证码登录"}
+          </button>
+        )}
       </form>
     </div>
   )
