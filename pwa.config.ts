@@ -3,7 +3,7 @@ import type { VitePWAOptions } from "vite-plugin-pwa"
 import { VitePWA } from "vite-plugin-pwa"
 
 const pwaOption: Partial<VitePWAOptions> = {
-  registerType: "autoUpdate",
+  registerType: "prompt",
   includeAssets: ["icon.svg", "apple-touch-icon.png"],
   filename: "swx.js",
   manifest: {
@@ -37,8 +37,6 @@ const pwaOption: Partial<VitePWAOptions> = {
     ],
   },
   workbox: {
-    clientsClaim: true,
-    skipWaiting: true,
     navigateFallbackDenylist: [/^\/api/],
   },
   devOptions: {
