@@ -1,8 +1,4 @@
-import { SiteUrl } from "@shared/site"
-
-function dateKey(date = new Date()) {
-  return new Date(date.getTime() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10)
-}
+import { SiteUrl, chinaDateKey } from "@shared/site"
 
 function rfcDate(date = new Date()) {
   return date.toUTCString()
@@ -17,7 +13,7 @@ export default defineEventHandler((event) => {
   const items = Array.from({ length: 14 }, (_, index) => {
     const date = new Date()
     date.setDate(date.getDate() - index)
-    const key = dateKey(date)
+    const key = chinaDateKey(date)
     const link = `${SiteUrl}/daily/${key}-ai`
     return `    <item>
       <title>${xmlEscape(`${key} AI 日报：大模型、AI 工具与开源动态`)}</title>

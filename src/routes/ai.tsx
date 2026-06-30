@@ -1,7 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import type { NewsItem, SourceID } from "@shared/types"
-import { SiteUrl } from "@shared/site"
+import { SiteUrl, chinaDateKey } from "@shared/site"
 import { seoTitle, usePageSEO } from "~/utils/seo"
 
 const aiSources = ["aihot", "aihot-selected", "solidot", "v2ex-share"] as SourceID[]
@@ -32,7 +32,7 @@ function AiChannelComponent() {
     retry: false,
   })
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = chinaDateKey()
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",

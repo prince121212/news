@@ -1,15 +1,11 @@
-import { SeoRoutes, SiteUrl } from "@shared/site"
-
-function dateKey(date = new Date()) {
-  return new Date(date.getTime() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10)
-}
+import { SeoRoutes, SiteUrl, chinaDateKey } from "@shared/site"
 
 function recentDailyRoutes(days = 21) {
   return Array.from({ length: days }, (_, index) => {
     const date = new Date()
     date.setDate(date.getDate() - index)
     return {
-      path: `/daily/${dateKey(date)}-ai`,
+      path: `/daily/${chinaDateKey(date)}-ai`,
       priority: index === 0 ? "0.9" : "0.7",
       changefreq: index === 0 ? "hourly" : "weekly",
     }
@@ -22,7 +18,7 @@ function xmlEscape(value: string) {
 
 export default defineEventHandler((event) => {
   setHeader(event, "content-type", "application/xml; charset=utf-8")
-  const lastmod = dateKey()
+  const lastmod = chinaDateKey()
   const routes = [...SeoRoutes, ...recentDailyRoutes()]
   const urls = routes.map(route => `  <url>
     <loc>${xmlEscape(`${SiteUrl}${route.path}`)}</loc>

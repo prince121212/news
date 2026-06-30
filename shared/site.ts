@@ -13,3 +13,7 @@ export const SeoRoutes = [
   { path: "/topic/openai", priority: "0.7", changefreq: "daily" },
   { path: "/source/aihot", priority: "0.6", changefreq: "hourly" },
 ] as const
+
+export function chinaDateKey(date = new Date()) {
+  return new Date(date.getTime() + 8 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}

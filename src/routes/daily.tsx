@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router"
+import { chinaDateKey } from "@shared/site"
 import { seoTitle, usePageSEO } from "~/utils/seo"
 
 export const Route = createFileRoute("/daily")({
@@ -8,7 +9,7 @@ export const Route = createFileRoute("/daily")({
 function dateKey(offset: number) {
   const date = new Date()
   date.setDate(date.getDate() - offset)
-  return date.toISOString().slice(0, 10)
+  return chinaDateKey(date)
 }
 
 function DailyIndexComponent() {
