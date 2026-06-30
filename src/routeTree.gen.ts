@@ -9,19 +9,55 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DailyRouteImport } from './routes/daily'
+import { Route as AiRouteImport } from './routes/ai'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TopicSlugRouteImport } from './routes/topic.$slug'
+import { Route as SourceIdRouteImport } from './routes/source.$id'
+import { Route as DailyDateRouteImport } from './routes/daily.$date'
 import { Route as CColumnRouteImport } from './routes/c.$column'
 
+const DailyRoute = DailyRouteImport.update({
+  id: '/daily',
+  path: '/daily',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiRoute = AiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TopicSlugRoute = TopicSlugRouteImport.update({
+  id: '/topic/$slug',
+  path: '/topic/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SourceIdRoute = SourceIdRouteImport.update({
+  id: '/source/$id',
+  path: '/source/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DailyDateRoute = DailyDateRouteImport.update({
+  id: '/$date',
+  path: '/$date',
+  getParentRoute: () => DailyRoute,
 } as any)
 const CColumnRoute = CColumnRouteImport.update({
   id: '/c/$column',
@@ -31,41 +67,113 @@ const CColumnRoute = CColumnRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/ai': typeof AiRoute
+  '/daily': typeof DailyRouteWithChildren
   '/c/$column': typeof CColumnRoute
+  '/daily/$date': typeof DailyDateRoute
+  '/source/$id': typeof SourceIdRoute
+  '/topic/$slug': typeof TopicSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/ai': typeof AiRoute
+  '/daily': typeof DailyRouteWithChildren
   '/c/$column': typeof CColumnRoute
+  '/daily/$date': typeof DailyDateRoute
+  '/source/$id': typeof SourceIdRoute
+  '/topic/$slug': typeof TopicSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/admin': typeof AdminRoute
+  '/ai': typeof AiRoute
+  '/daily': typeof DailyRouteWithChildren
   '/c/$column': typeof CColumnRoute
+  '/daily/$date': typeof DailyDateRoute
+  '/source/$id': typeof SourceIdRoute
+  '/topic/$slug': typeof TopicSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/c/$column'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/ai'
+    | '/daily'
+    | '/c/$column'
+    | '/daily/$date'
+    | '/source/$id'
+    | '/topic/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/c/$column'
-  id: '__root__' | '/' | '/admin' | '/c/$column'
+  to:
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/ai'
+    | '/daily'
+    | '/c/$column'
+    | '/daily/$date'
+    | '/source/$id'
+    | '/topic/$slug'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/ai'
+    | '/daily'
+    | '/c/$column'
+    | '/daily/$date'
+    | '/source/$id'
+    | '/topic/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRoute
+  AiRoute: typeof AiRoute
+  DailyRoute: typeof DailyRouteWithChildren
   CColumnRoute: typeof CColumnRoute
+  SourceIdRoute: typeof SourceIdRoute
+  TopicSlugRoute: typeof TopicSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/daily': {
+      id: '/daily'
+      path: '/daily'
+      fullPath: '/daily'
+      preLoaderRoute: typeof DailyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai': {
+      id: '/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -74,6 +182,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/topic/$slug': {
+      id: '/topic/$slug'
+      path: '/topic/$slug'
+      fullPath: '/topic/$slug'
+      preLoaderRoute: typeof TopicSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/source/$id': {
+      id: '/source/$id'
+      path: '/source/$id'
+      fullPath: '/source/$id'
+      preLoaderRoute: typeof SourceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/daily/$date': {
+      id: '/daily/$date'
+      path: '/$date'
+      fullPath: '/daily/$date'
+      preLoaderRoute: typeof DailyDateRouteImport
+      parentRoute: typeof DailyRoute
     }
     '/c/$column': {
       id: '/c/$column'
@@ -85,10 +214,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface DailyRouteChildren {
+  DailyDateRoute: typeof DailyDateRoute
+}
+
+const DailyRouteChildren: DailyRouteChildren = {
+  DailyDateRoute: DailyDateRoute,
+}
+
+const DailyRouteWithChildren = DailyRoute._addFileChildren(DailyRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   AdminRoute: AdminRoute,
+  AiRoute: AiRoute,
+  DailyRoute: DailyRouteWithChildren,
   CColumnRoute: CColumnRoute,
+  SourceIdRoute: SourceIdRoute,
+  TopicSlugRoute: TopicSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
